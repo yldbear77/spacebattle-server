@@ -31,6 +31,7 @@ public:
 	}
 
 	void ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, int remainingBytes);
+	void ProcessPacket(SocketAddress clntAddr);
 
 	void DecreaseClntCount() { --mClntCounts; }
 	void IncreaseClntCount() { ++mClntCounts; }

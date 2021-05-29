@@ -8,10 +8,11 @@ class ClientCtx {
 public:
 	ClientCtx(TCPSocketPtr sock, SocketAddress sockAddr);
 
-	uint32_t GetPacketSize() { return mPacketSize; }
-	uint32_t GetRecvdSizeBytesCount() { return mRecvdSizeBytesCount; }
+	uint32_t GetPacketSize() const { return mPacketSize; }
+	uint32_t GetRecvdSizeBytesCount() const { return mRecvdSizeBytesCount; }
 
-	uint32_t GetRecvdBytesCount() { return mRecvdBytesCount; }
+	uint32_t GetRecvdBytesCount() const { return mRecvdBytesCount; }
+	uint32_t GetPacketType() const { return mPacketBuf[0]; }
 
 	void SetRecvdBytesCount(uint32_t bytes) { mRecvdBytesCount = bytes; }
 

@@ -1,8 +1,6 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#include <cstdint>
-
 #define SERVER_IP		INADDR_ANY
 #define SERVER_PORT		9001
 

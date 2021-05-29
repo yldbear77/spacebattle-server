@@ -18,7 +18,7 @@ typedef struct {
 
 class TCPSocket {
 public:
-	~TCPSocket() { closesocket(mSock); }
+	~TCPSocket() { delete pRecvExtOver; closesocket(mSock); }
 	int Connect(const SocketAddress& inAddress);
 	int Bind(const SocketAddress& inToAddress);
 	int Listen(int inBackLog);
@@ -32,11 +32,11 @@ public:
 private:
 	friend class SocketUtil;
 	friend class ClientData;
-	TCPSocket(SOCKET inSocket) : mSock(inSocket) {}
+	TCPSocket(SOCKET inSocket) : mSock(inSocket) { pRecvExtOver = new EXT_OVERLAPPED; }
 	SOCKET mSock;
 	SocketAddress mAddr;
 
-	EXT_OVERLAPPED* pRecvExtOver;
+	LPEXT_OVERLAPPED pRecvExtOver;
 };
 
 typedef std::shared_ptr<TCPSocket> TCPSocketPtr;

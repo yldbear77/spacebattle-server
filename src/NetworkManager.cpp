@@ -30,7 +30,7 @@ void NetworkManager::PacketWorker(IOCPPtr pIOCP, NetworkManager* pNm) {
 
 	while (1) {
 		unsigned ioBytes = pIOCP->GetCompletion(pKeyData, pExtOver);
-		switch (ioBytes) {
+		switch (pExtOver->mode) {
 		case MODE_RECV:
 			if (ioBytes == 0) {
 				// TODO: 클라이언트 연결 종료 처리, 현재 접속 중인 유저 수 감소
@@ -52,7 +52,10 @@ void NetworkManager::AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkMana
 		SocketAddress clntAddr;
 		TCPSocketPtr pClntSock(pSock->Accept(clntAddr));
 		pClntSock->SetAddr(clntAddr);
+
+		pNm->RegisterClient(pClntSock, clntAddr);
 		pIOCP->ConnectSockToIOCP(pClntSock, clntAddr);
+
 		pClntSock->Receive();
 	}
 }
@@ -76,10 +79,11 @@ void NetworkManager::ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, 
 			}
 		}
 		const int recvdBytesCount = pCc->GetRecvdBytesCount();
-		int packetSize = pCc->GetPacketSize();
+		const int packetSize = pCc->GetPacketSize() - sizeof(PACKET_SIZE);
 		/* 패킷을 완성하여 처리 가능 */
-		if (packetSize <= pCc->GetRecvdBytesCount() + remainingBytes) {
+		if (packetSize <= recvdBytesCount + remainingBytes) {
 			pCc->RecvPacket(ioBuffer, packetSize - recvdBytesCount, true);
+			ProcessPacket(clntAddr);
 			ioBuffer += packetSize - recvdBytesCount;
 			remainingBytes -= packetSize - recvdBytesCount;
 		}
@@ -88,5 +92,13 @@ void NetworkManager::ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, 
 			pCc->RecvPacket(ioBuffer, remainingBytes, false);
 			break;
 		}
+	}
+}
+
+void NetworkManager::ProcessPacket(SocketAddress clntAddr) {
+	ClientCtxPtr pCc = mAddrToCcpMap[clntAddr];
+	uint32_t packetType = pCc->GetPacketType();
+	switch (packetType) {
+		// TODO: 패킷에 따른 분기 코드 작성
 	}
 }
