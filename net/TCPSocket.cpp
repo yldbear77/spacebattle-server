@@ -2,7 +2,7 @@
 #include "SocketUtil.h"
 
 int TCPSocket::Connect(const SocketAddress& inAddress) {
-	int err = connect(mSocket, &inAddress.mSockAddr, (int)inAddress.GetSize());
+	int err = connect(mSock, &inAddress.mSockAddr, (int)inAddress.GetSize());
 	if (err < 0) {
 		SocketUtil::ReportError("TCPSocket::Connect");
 		return -SocketUtil::GetLastError();
@@ -11,7 +11,7 @@ int TCPSocket::Connect(const SocketAddress& inAddress) {
 }
 
 int TCPSocket::Bind(const SocketAddress& inToAddress) {
-	int err = bind(mSocket, &inToAddress.mSockAddr, (int)inToAddress.GetSize());
+	int err = bind(mSock, &inToAddress.mSockAddr, (int)inToAddress.GetSize());
 	if (err == SOCKET_ERROR) {
 		SocketUtil::ReportError("TCPSocket::Bind");
 		return -SocketUtil::GetLastError();
@@ -20,7 +20,7 @@ int TCPSocket::Bind(const SocketAddress& inToAddress) {
 }
 
 int TCPSocket::Listen(int inBackLog) {
-	int err = listen(mSocket, inBackLog);
+	int err = listen(mSock, inBackLog);
 	if (err == SOCKET_ERROR) {
 		SocketUtil::ReportError("TCPSocket::Listen");
 		return -SocketUtil::GetLastError();
@@ -30,7 +30,7 @@ int TCPSocket::Listen(int inBackLog) {
 
 std::shared_ptr<TCPSocket> TCPSocket::Accept(SocketAddress& inFromAddress) {
 	socklen_t length = inFromAddress.GetSize();
-	SOCKET sock = accept(mSocket, &inFromAddress.mSockAddr, &length);
+	SOCKET sock = accept(mSock, &inFromAddress.mSockAddr, &length);
 	if (sock == INVALID_SOCKET) {
 		SocketUtil::ReportError("TCPSocket::Accept");
 		return nullptr;
@@ -48,7 +48,7 @@ int TCPSocket::Send(const void* inData, int inLen) {
 	pSendExtOver->wsaBuf.len = inLen;
 	pSendExtOver->mode = MODE_SEND;
 
-	int err = WSASend(mSocket, &(pSendExtOver->wsaBuf), 1, &sentBytes, flags, &(pSendExtOver->overlapped), NULL);
+	int err = WSASend(mSock, &(pSendExtOver->wsaBuf), 1, &sentBytes, flags, &(pSendExtOver->overlapped), NULL);
 	if (err == SOCKET_ERROR) {
 		int lastErr = SocketUtil::GetLastError();
 		if (lastErr != WSA_IO_PENDING) {
@@ -68,7 +68,7 @@ int TCPSocket::Receive() {
 	pRecvExtOver->wsaBuf.len = sizeof(pRecvExtOver->buffer);
 	pRecvExtOver->mode = MODE_RECV;
 
-	int err = WSARecv(mSocket, &(pRecvExtOver->wsaBuf), 1, &recvBytes, &flags, &(pRecvExtOver->overlapped), NULL);
+	int err = WSARecv(mSock, &(pRecvExtOver->wsaBuf), 1, &recvBytes, &flags, &(pRecvExtOver->overlapped), NULL);
 	if (err == SOCKET_ERROR) {
 		int lastErr = SocketUtil::GetLastError();
 		if (lastErr != WSA_IO_PENDING) {

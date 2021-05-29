@@ -1,7 +1,7 @@
 #include "IOCP.h"
 #include "SocketUtil.h"
 
-void IOCP::ConnectSockToIOCP(std::shared_ptr<TCPSocket> clntSock, SocketAddress& clntAddr) {
+int32_t IOCP::ConnectSockToIOCP(TCPSocketPtr clntSock, SocketAddress& clntAddr) {
 	LPIOCP_KEY_DATA pKeyData = new IOCP_KEY_DATA;
 	pKeyData->pClntSock = clntSock;
 	pKeyData->clntAddr = clntAddr;
@@ -9,8 +9,10 @@ void IOCP::ConnectSockToIOCP(std::shared_ptr<TCPSocket> clntSock, SocketAddress&
 	HANDLE hIOCP = CreateIoCompletionPort((HANDLE)clntSock->GetSocket(), mComPort, (ULONG_PTR)pKeyData, 0);
 	if (hIOCP == NULL) {
 		SocketUtil::ReportError("IOCP::ConnectSockToIOCP");
-		//return -SocketUtil::GetLastError();
+		return -SocketUtil::GetLastError();
 	}
+
+	return 0;
 }
 
 int32_t IOCP::GetCompletion(LPIOCP_KEY_DATA& pKeyData, LPEXT_OVERLAPPED& pIOData) {

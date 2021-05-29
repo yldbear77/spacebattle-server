@@ -5,7 +5,8 @@ bool SocketUtil::Init() {
 	WSADATA wsaData;
 	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (err != NO_ERROR) {
-		// TODO: 에러 처리
+		SocketUtil::ReportError("SocketUtil::Init");
+		return false;
 	}
 	return true;
 }
@@ -29,13 +30,14 @@ void SocketUtil::ReportError(const char* inOperationDesc) {
 		NULL
 	);
 	LOG("Error %s: %d- %s", inOperationDesc, errNum, lpMsgBuf);
+	if (lpMsgBuf != NULL) LocalFree(lpMsgBuf);
 }
 
 int SocketUtil::GetLastError() {
 	return WSAGetLastError();
 }
 
-std::shared_ptr<TCPSocket> SocketUtil::CreateTCPSocket() {
+TCPSocketPtr SocketUtil::CreateTCPSocket() {
 	SOCKET sock = WSASocket(PF_INET, SOCK_STREAM, IPPROTO_TCP, 0, NULL, WSA_FLAG_OVERLAPPED);
 
 	// TIME-WAIT disable debugging option
@@ -51,7 +53,7 @@ std::shared_ptr<TCPSocket> SocketUtil::CreateTCPSocket() {
 	return std::shared_ptr<TCPSocket>(new TCPSocket(sock));
 }
 
-std::shared_ptr<IOCP> SocketUtil::CreateIOCP() {
+IOCPPtr SocketUtil::CreateIOCP() {
 	HANDLE comPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 	if (comPort == NULL) {
 		SocketUtil::ReportError("SocketUtil::CreateIOCP");

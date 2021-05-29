@@ -1,6 +1,10 @@
-#include <iostream>
+#include "include/Server.h"
+#include "net/SocketUtil.h"
 
 int main(void) {
-	std::cout << "Hello, World !\n";
+	if (SocketUtil::Init()) {
+		Server::GetInstance()->Run();
+		// TODO: 명령 입력 대기
+	}
 	return 0;
 }

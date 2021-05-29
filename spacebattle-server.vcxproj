@@ -145,14 +145,21 @@
     <ClCompile Include="net\SocketAddress.cpp" />
     <ClCompile Include="net\SocketUtil.cpp" />
     <ClCompile Include="net\TCPSocket.cpp" />
+    <ClCompile Include="src\ClientCtx.cpp" />
+    <ClCompile Include="src\NetworkManager.cpp" />
+    <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="util\Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Config.h" />
+    <ClInclude Include="include\NetworkManager.h" />
+    <ClInclude Include="include\Packet.h" />
+    <ClInclude Include="include\Server.h" />
     <ClInclude Include="net\IOCP.h" />
     <ClInclude Include="net\SocketAddress.h" />
     <ClInclude Include="net\SocketUtil.h" />
     <ClInclude Include="net\TCPSocket.h" />
+    <ClInclude Include="include\ClientCtx.h" />
     <ClInclude Include="util\Logger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

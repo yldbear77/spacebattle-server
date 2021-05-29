@@ -4,6 +4,7 @@
 #include <WinSock2.h>
 
 #include "TCPSocket.h"
+#include "IOCP.h"
 #include "../util/Logger.h"
 
 #pragma comment(lib, "ws2_32.lib")
@@ -18,8 +19,8 @@ public:
 	static void ReportError(const char* inOperationDesc);
 	static int GetLastError();
 
-	static std::shared_ptr<TCPSocket> CreateTCPSocket();
-	static std::shared_ptr<IOCP> CreateIOCP();
+	static TCPSocketPtr CreateTCPSocket();
+	static IOCPPtr CreateIOCP();
 
 private:
 };

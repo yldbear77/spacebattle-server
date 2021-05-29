@@ -18,7 +18,7 @@ typedef struct {
 
 class TCPSocket {
 public:
-	~TCPSocket() { closesocket(mSocket); }
+	~TCPSocket() { closesocket(mSock); }
 	int Connect(const SocketAddress& inAddress);
 	int Bind(const SocketAddress& inToAddress);
 	int Listen(int inBackLog);
@@ -27,15 +27,13 @@ public:
 	int Receive();
 	void SetAddr(SocketAddress sa) { mAddr = sa; }
 
-	SOCKET GetSocket() { return mSocket; }
+	SOCKET GetSocket() { return mSock; }
 
 private:
-	static NetworkManager* mNm;
-
 	friend class SocketUtil;
 	friend class ClientData;
-	TCPSocket(SOCKET inSocket) : mSocket(inSocket) {}
-	SOCKET mSocket;
+	TCPSocket(SOCKET inSocket) : mSock(inSocket) {}
+	SOCKET mSock;
 	SocketAddress mAddr;
 
 	EXT_OVERLAPPED* pRecvExtOver;
