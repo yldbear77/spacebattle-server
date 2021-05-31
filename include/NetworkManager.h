@@ -8,11 +8,15 @@
 #include "Config.h"
 #include "Packet.h"
 #include "ClientCtx.h"
+#include "GameManager.h"
 
 #include "../net/SocketAddress.h"
 #include "../net/TCPSocket.h"
 #include "../net/IOCP.h"
 #include "../net/SocketUtil.h"
+#include "../net/BitStream.h"
+
+#include "../util/Logger.h"
 
 class NetworkManager {
 public:
@@ -23,7 +27,7 @@ public:
 		return mInstance;
 	}
 
-	void Run();
+	void Run(GameManager* pGameManager);
 
 	void RegisterClient(TCPSocketPtr pClntSock, SocketAddress clntAddr) {
 		ClientCtxPtr newClient = std::make_shared<ClientCtx>(pClntSock, clntAddr);
@@ -31,7 +35,7 @@ public:
 	}
 
 	void ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, int remainingBytes);
-	void ProcessPacket(SocketAddress clntAddr);
+	void ProcessPacket(ClientCtxPtr pCc);
 
 	void DecreaseClntCount() { --mClntCounts; }
 	void IncreaseClntCount() { ++mClntCounts; }
@@ -54,8 +58,12 @@ private:
 
 	std::unordered_map<SocketAddress, ClientCtxPtr> mAddrToCcpMap;
 
-	static void PacketWorker(IOCPPtr pIOCP, NetworkManager* pNm);
-	static void AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkManager* pNm);
+	GameManager* mGameManager;
+
+	static void PacketWorker(IOCPPtr pIOCP, NetworkManager* pNetworkManager);
+	static void AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkManager* pNetworkManager);
+
+	void HandleRequestConnect(ClientCtxPtr pCc);
 };
 
 #endif

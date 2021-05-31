@@ -3,5 +3,5 @@
 Server* Server::mInstance = nullptr;
 
 void Server::Run() {
-	mNetworkManager->Run();
+	mNetworkManager->Run(mGameManager);
 }

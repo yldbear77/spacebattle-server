@@ -3,6 +3,7 @@
 
 #include "Config.h"
 #include "NetworkManager.h"
+#include "GameManager.h"
 
 class Server {
 public:
@@ -17,8 +18,12 @@ private:
 	static Server* mInstance;
 
 	NetworkManager* mNetworkManager;
+	GameManager* mGameManager;
 
-	Server() { mNetworkManager = NetworkManager::GetInstance(); }
+	Server() {
+		mNetworkManager = NetworkManager::GetInstance();
+		mGameManager = GameManager::GetInstance();
+	}
 };
 
 #endif

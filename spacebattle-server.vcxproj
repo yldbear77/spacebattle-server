@@ -141,20 +141,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="net\BitStream.cpp" />
     <ClCompile Include="net\IOCP.cpp" />
     <ClCompile Include="net\SocketAddress.cpp" />
     <ClCompile Include="net\SocketUtil.cpp" />
     <ClCompile Include="net\TCPSocket.cpp" />
     <ClCompile Include="src\ClientCtx.cpp" />
+    <ClCompile Include="src\GameManager.cpp" />
     <ClCompile Include="src\NetworkManager.cpp" />
     <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="util\Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Config.h" />
+    <ClInclude Include="include\GameManager.h" />
     <ClInclude Include="include\NetworkManager.h" />
     <ClInclude Include="include\Packet.h" />
     <ClInclude Include="include\Server.h" />
+    <ClInclude Include="net\BitStream.h" />
     <ClInclude Include="net\IOCP.h" />
     <ClInclude Include="net\SocketAddress.h" />
     <ClInclude Include="net\SocketUtil.h" />

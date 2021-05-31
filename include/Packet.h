@@ -3,13 +3,13 @@
 
 #include <cstdint>
 
-#define CS_REQ_CONNECT	0
-#define SC_RES_CONNECT	1
-
-#pragma pack(push, 1)
+constexpr int CS_REQ_CONNECT =	0;
+constexpr int SC_RES_CONNECT =	1;
 
 typedef uint16_t	PACKET_SIZE;
 typedef uint8_t		PACKET_TYPE;
+
+#pragma pack(push, 1)
 
 typedef struct {
 	PACKET_SIZE size;

@@ -8,15 +8,25 @@ class ClientCtx {
 public:
 	ClientCtx(TCPSocketPtr sock, SocketAddress sockAddr);
 
-	uint32_t GetPacketSize() const { return mPacketSize; }
-	uint32_t GetRecvdSizeBytesCount() const { return mRecvdSizeBytesCount; }
+	const SocketAddress& GetSocketAddr() const { return mAddr; }
 
 	uint32_t GetRecvdBytesCount() const { return mRecvdBytesCount; }
-	uint32_t GetPacketType() const { return mPacketBuf[0]; }
+	const uint8_t* GetPacketBuf() const { return mPacketBuf; }
+
+	template <class T>
+	uint32_t GetPacketSize() { return *(reinterpret_cast<T*>(&mPacketBuf[0])); }
+
+	template <class T, class U>
+	uint32_t GetPacketType() { return *(reinterpret_cast<U*>(&mPacketBuf[sizeof(T)])); }
+
+	template <class T, class U>
+	const uint8_t* GetPayload() { return &mPacketBuf[sizeof(T) + sizeof(U)]; }
+
+	template <class T, class U>
+	uint32_t GetPayloadSizeInBit() { return (GetPacketSize<T>() - sizeof(T) - sizeof(U)) * 8; }
 
 	void SetRecvdBytesCount(uint32_t bytes) { mRecvdBytesCount = bytes; }
 
-	void RecvSizeBytes(uint8_t* ioBuffer, int count);
 	void RecvPacket(uint8_t* ioBuffer, int count, bool isDone);
 
 private:
@@ -25,15 +35,8 @@ private:
 
 	EXT_OVERLAPPED mRecvExtOver;		// overlapped 구조체 확장
 
-	uint32_t mPacketSize;				// 패킷 크기
-	uint32_t mRecvdSizeBytesCount;		// 패킷 크기를 얼만큼 읽어들였는가
-
 	uint32_t mRecvdBytesCount;			// 읽어들인 바이트 수
 	uint8_t mPacketBuf[MAX_BUF_SIZE];	// 패킷을 담을 버퍼
-	
-	bool mIsValid;						// 이름, 캐릭터, 맵을 설정했는가
-
-	// TODO: 게임 데이터 포인터 추가
 };
 
 typedef std::shared_ptr<ClientCtx> ClientCtxPtr;
