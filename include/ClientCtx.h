@@ -23,11 +23,12 @@ public:
 	const uint8_t* GetPayload() { return &mPacketBuf[sizeof(T) + sizeof(U)]; }
 
 	template <class T, class U>
-	uint32_t GetPayloadSizeInBit() { return (GetPacketSize<T>() - sizeof(T) - sizeof(U)) * 8; }
+	uint32_t GetPayloadSizeInBits() { return (GetPacketSize<T>() - sizeof(T) - sizeof(U)) * 8; }
 
 	void SetRecvdBytesCount(uint32_t bytes) { mRecvdBytesCount = bytes; }
 
 	void RecvPacket(uint8_t* ioBuffer, int count, bool isDone);
+	void SendPacket(uint8_t* ioBuffer, int count) { mSock->Send(reinterpret_cast<void*>(ioBuffer), count); }
 
 private:
 	TCPSocketPtr mSock;

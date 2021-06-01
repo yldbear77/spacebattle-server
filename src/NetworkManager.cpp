@@ -105,15 +105,21 @@ void NetworkManager::ProcessPacket(ClientCtxPtr pCc) {
 
 void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
 	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
-	const uint32_t payloadSize = pCc->GetPayloadSizeInBit<PACKET_SIZE, PACKET_TYPE>();
+	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
 	
 	InputBitStream ibs(payload, payloadSize);
 
-	uint8_t name[20];
+	uint8_t nameLen;
+	uint8_t name[20] = { 0 };
 	uint8_t character;
 	uint8_t mapCode;
 
-	ibs.ReadBytes(reinterpret_cast<void*>(&name), 20);
+	ibs.ReadBytes(reinterpret_cast<void*>(&nameLen), 1);
+	ibs.ReadBytes(reinterpret_cast<void*>(&name), nameLen);
 	ibs.ReadBytes(reinterpret_cast<void*>(&character), 1);
 	ibs.ReadBytes(reinterpret_cast<void*>(&mapCode), 1);
+
+	mGameManager->InsertWaitingQ(pCc, std::string(reinterpret_cast<char*>(name)), character, mapCode);
+	// TODO: 등록 완료 송신
+	// pCc->SendPacket();
 }

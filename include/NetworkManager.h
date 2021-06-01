@@ -21,9 +21,7 @@
 class NetworkManager {
 public:
 	static NetworkManager* GetInstance() {
-		if (mInstance == nullptr) {
-			mInstance = new NetworkManager();
-		}
+		if (mInstance == nullptr) mInstance = new NetworkManager();
 		return mInstance;
 	}
 
