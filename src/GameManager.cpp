@@ -2,19 +2,13 @@
 
 GameManager* GameManager::mInstance = nullptr;
 
-void GameManager::InsertWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t character, uint8_t mapCode) {
-	WAITING_DATA waitingData = { name, character };
+void GameManager::EnqueueWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t character, uint8_t mapCode) {
 	switch (mapCode) {
 	case MAP_10_10:
-		mLockA.lock();
-		mWaitingAQ.push(pCc);
-		mLockA.unlock();
+		mQMapA.Enqueue(pCc, name, character, mapCode);
 		break;
 	case MAP_20_20:
-		mLockB.lock();
-		mWaitingBQ.push(pCc);
-		mLockB.unlock();
+		mQMapB.Enqueue(pCc, name, character, mapCode);
 		break;
 	}
-	mWaitingData[pCc] = waitingData;
 }

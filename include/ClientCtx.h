@@ -28,7 +28,9 @@ public:
 	void SetRecvdBytesCount(uint32_t bytes) { mRecvdBytesCount = bytes; }
 
 	void RecvPacket(uint8_t* ioBuffer, int count, bool isDone);
-	void SendPacket(uint8_t* ioBuffer, int count) { mSock->Send(reinterpret_cast<void*>(ioBuffer), count); }
+	void SendPacket(const uint8_t* ioBuffer, int count) { 
+		mSock->Send(reinterpret_cast<void*>(const_cast<uint8_t*>(ioBuffer)), count);
+	}
 
 private:
 	TCPSocketPtr mSock;

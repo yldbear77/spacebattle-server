@@ -11,8 +11,8 @@
 
 #define MAX_BUF_SIZE	65540
 
-#define MODE_SEND		0
-#define MODE_RECV		1
+constexpr int MODE_SEND =	0;
+constexpr int MODE_RECV =	1;
 
 constexpr int MAP_10_10	=	0;
 constexpr int MAP_20_20	=	1;

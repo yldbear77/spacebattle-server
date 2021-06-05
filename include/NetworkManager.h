@@ -2,7 +2,7 @@
 #define __NETWORK_MANAGER_H__
 
 #include <unordered_map>
-
+#include <string>
 #include <thread>
 
 #include "Config.h"

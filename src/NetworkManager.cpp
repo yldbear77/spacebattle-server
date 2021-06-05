@@ -119,7 +119,17 @@ void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
 	ibs.ReadBytes(reinterpret_cast<void*>(&character), 1);
 	ibs.ReadBytes(reinterpret_cast<void*>(&mapCode), 1);
 
-	mGameManager->InsertWaitingQ(pCc, std::string(reinterpret_cast<char*>(name)), character, mapCode);
-	// TODO: 등록 완료 송신
-	// pCc->SendPacket();
+	mGameManager->EnqueueWaitingQ(pCc, std::string(reinterpret_cast<char*>(name)), character, mapCode);
+
+	OutputBitStream obs;
+
+	uint16_t size = 4;
+	uint8_t type = SC_RES_CONNECT;
+	uint8_t resCode = 0;
+
+	obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+	obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+
+	pCc->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 }

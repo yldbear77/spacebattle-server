@@ -150,6 +150,7 @@
     <ClCompile Include="src\GameManager.cpp" />
     <ClCompile Include="src\NetworkManager.cpp" />
     <ClCompile Include="src\Server.cpp" />
+    <ClCompile Include="src\WaitQueue.cpp" />
     <ClCompile Include="util\Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +159,7 @@
     <ClInclude Include="include\NetworkManager.h" />
     <ClInclude Include="include\Packet.h" />
     <ClInclude Include="include\Server.h" />
+    <ClInclude Include="include\WaitQueue.h" />
     <ClInclude Include="net\BitStream.h" />
     <ClInclude Include="net\IOCP.h" />
     <ClInclude Include="net\SocketAddress.h" />
