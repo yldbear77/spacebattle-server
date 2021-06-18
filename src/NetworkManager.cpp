@@ -103,21 +103,75 @@ void NetworkManager::ProcessPacket(ClientCtxPtr pCc) {
 	}
 }
 
+void NetworkManager::SendMatchSuccessPacket(
+	ClientCtxPtr clientA,
+	ClientCtxPtr clientB,
+	uint8_t chA,
+	std::string nameA,
+	uint8_t chB,
+	std::string nameB)
+{
+	uint8_t type = SC_MATCH_SUCCESS;
+
+	uint16_t sizeA = 2;
+	sizeA += 1;				// 패킷 타입
+	sizeA += 1;				// B의 캐릭터
+	sizeA += 1;				// B의 이름 길이 정보
+	sizeA += nameB.size();	// B의 이름 길이
+	uint8_t sizeNameB = nameB.size();
+
+	OutputBitStream obsA;
+	obsA.WriteBytes(reinterpret_cast<void*>(&sizeA), 2);
+	obsA.WriteBytes(reinterpret_cast<void*>(&chB), 1);
+	obsA.WriteBytes(reinterpret_cast<void*>(&sizeNameB), 1);
+	obsA.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(nameB.c_str())), sizeNameB);
+
+	uint16_t sizeB = 2;
+	sizeB += 1;				// 패킷 타입
+	sizeB += 1;				// A의 캐릭터
+	sizeB += 1;				// A의 이름 길이 정보
+	sizeB += nameA.size();	// A의 이름 길이
+	uint8_t sizeNameA = nameA.size();
+
+	OutputBitStream obsB;
+	obsB.WriteBytes(reinterpret_cast<void*>(&sizeB), 2);
+	obsB.WriteBytes(reinterpret_cast<void*>(&chA), 1);
+	obsB.WriteBytes(reinterpret_cast<void*>(&sizeNameA), 1);
+	obsB.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(nameA.c_str())), sizeNameA);
+
+	clientA->SendPacket(obsA.GetBufferPtr(), obsA.GetByteLength());
+	clientB->SendPacket(obsB.GetBufferPtr(), obsB.GetByteLength());
+}
+
+void NetworkManager::SendRequestDeployPacket(ClientCtxPtr clientA, ClientCtxPtr clientB) {
+	uint16_t size = 4;
+	uint8_t type = SC_REQ_DEPLOY;
+	uint8_t timeLimit = DEPLOY_TIME;
+
+	OutputBitStream obs;
+	obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+	obs.WriteBytes(reinterpret_cast<void*>(&timeLimit), 1);
+
+	clientA->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+	clientB->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+}
+
 void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
 	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
 	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
 	
 	InputBitStream ibs(payload, payloadSize);
 
+	uint8_t mapCode;
+	uint8_t character;
 	uint8_t nameLen;
 	uint8_t name[20] = { 0 };
-	uint8_t character;
-	uint8_t mapCode;
 
+	ibs.ReadBytes(reinterpret_cast<void*>(&mapCode), 1);
+	ibs.ReadBytes(reinterpret_cast<void*>(&character), 1);
 	ibs.ReadBytes(reinterpret_cast<void*>(&nameLen), 1);
 	ibs.ReadBytes(reinterpret_cast<void*>(&name), nameLen);
-	ibs.ReadBytes(reinterpret_cast<void*>(&character), 1);
-	ibs.ReadBytes(reinterpret_cast<void*>(&mapCode), 1);
 
 	mGameManager->EnqueueWaitingQ(pCc, std::string(reinterpret_cast<char*>(name)), character, mapCode);
 

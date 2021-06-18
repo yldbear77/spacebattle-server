@@ -11,6 +11,8 @@
 
 #define MAX_BUF_SIZE	65540
 
+#define DEPLOY_TIME		120
+
 constexpr int MODE_SEND =	0;
 constexpr int MODE_RECV =	1;
 

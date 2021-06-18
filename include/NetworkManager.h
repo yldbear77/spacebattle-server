@@ -35,6 +35,9 @@ public:
 	void ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, int remainingBytes);
 	void ProcessPacket(ClientCtxPtr pCc);
 
+	void SendMatchSuccessPacket(ClientCtxPtr, ClientCtxPtr, uint8_t, std::string, uint8_t, std::string);
+	void SendRequestDeployPacket(ClientCtxPtr clientA, ClientCtxPtr clientB);
+
 	void DecreaseClntCount() { --mClntCounts; }
 	void IncreaseClntCount() { ++mClntCounts; }
 
