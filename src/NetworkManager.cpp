@@ -133,6 +133,7 @@ void NetworkManager::SendMatchSuccessPacket(
 
 	OutputBitStream obsA;
 	obsA.WriteBytes(reinterpret_cast<void*>(&sizeA), 2);
+	obsA.WriteBytes(reinterpret_cast<void*>(&type), 1);
 	obsA.WriteBytes(reinterpret_cast<void*>(&chB), 1);
 	obsA.WriteBytes(reinterpret_cast<void*>(&sizeNameB), 1);
 	obsA.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(nameB.c_str())), sizeNameB);
@@ -146,6 +147,7 @@ void NetworkManager::SendMatchSuccessPacket(
 
 	OutputBitStream obsB;
 	obsB.WriteBytes(reinterpret_cast<void*>(&sizeB), 2);
+	obsA.WriteBytes(reinterpret_cast<void*>(&type), 1);
 	obsB.WriteBytes(reinterpret_cast<void*>(&chA), 1);
 	obsB.WriteBytes(reinterpret_cast<void*>(&sizeNameA), 1);
 	obsB.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(nameA.c_str())), sizeNameA);
