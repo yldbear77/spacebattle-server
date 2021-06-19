@@ -5,6 +5,8 @@
 #include "NetworkManager.h"
 #include "GameManager.h"
 
+#include "../util/Logger.h"
+
 class Server {
 public:
 	static Server* GetInstance() {

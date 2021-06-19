@@ -29,7 +29,7 @@ void SocketUtil::ReportError(const char* inOperationDesc) {
 		0,
 		NULL
 	);
-	LOG("Error %s: %d- %s", inOperationDesc, errNum, lpMsgBuf);
+	LOG_DEBUG("Error %s: %d- %s", inOperationDesc, errNum, lpMsgBuf);
 	if (lpMsgBuf != NULL) LocalFree(lpMsgBuf);
 }
 

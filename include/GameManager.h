@@ -22,7 +22,7 @@ public:
 
 private:
 	static GameManager* mInstance;
-	GameManager() {};
+	GameManager();
 
 	RoomManager* mRoomManager;
 	NetworkManager* pNetworkManager;

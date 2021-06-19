@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "SocketAddress.h"
+
 #include "../include/Config.h"
 
 class NetworkManager;
@@ -32,6 +33,7 @@ public:
 private:
 	friend class SocketUtil;
 	friend class ClientData;
+
 	TCPSocket(SOCKET inSocket) : mSock(inSocket) { pRecvExtOver = new EXT_OVERLAPPED; }
 	SOCKET mSock;
 	SocketAddress mAddr;

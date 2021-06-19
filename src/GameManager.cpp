@@ -2,9 +2,15 @@
 
 GameManager* GameManager::mInstance = nullptr;
 
-void GameManager::Run() {
+GameManager::GameManager() {
 	mRoomManager = RoomManager::GetInstance();
 	pNetworkManager = NetworkManager::GetInstance();
+}
+
+void GameManager::Run() {
+	LOG_NOTIFY("게임 매니저 시작");
+	mRoomManager->Run();
+	LOG_NOTIFY("게임 생성 스레드 시작");
 	std::thread(CreateGame, &mQMapA, this).detach();
 	std::thread(CreateGame, &mQMapB, this).detach();
 }
@@ -30,22 +36,26 @@ void GameManager::CreateGame(WaitQueue* pWaitQueue, GameManager* pGameManager) {
 			clientB = pWaitQueue->Dequeue();
 
 			if (!clientA->GetOnlineStatus() || !clientB->GetOnlineStatus()) {
-				if (!clientA->GetOnlineStatus()) {
+				if (!clientA->GetOnlineStatus() && !clientB->GetOnlineStatus()) {
 					pWaitQueue->mWaitingData.erase(clientA);
-					pWaitQueue->Enqueue(
-						clientA,
-						pWaitQueue->mWaitingData[clientA].name,
-						pWaitQueue->mWaitingData[clientA].character,
-						pWaitQueue->mWaitingData[clientA].mapCode
-					);
-				}
-				if (!clientB->GetOnlineStatus()) {
 					pWaitQueue->mWaitingData.erase(clientB);
+				}
+				else if (!clientA->GetOnlineStatus()) {
+					pWaitQueue->mWaitingData.erase(clientA);
 					pWaitQueue->Enqueue(
 						clientB,
 						pWaitQueue->mWaitingData[clientB].name,
 						pWaitQueue->mWaitingData[clientB].character,
 						pWaitQueue->mWaitingData[clientB].mapCode
+					);
+				}
+				else if (!clientB->GetOnlineStatus()) {
+					pWaitQueue->mWaitingData.erase(clientB);
+					pWaitQueue->Enqueue(
+						clientA,
+						pWaitQueue->mWaitingData[clientA].name,
+						pWaitQueue->mWaitingData[clientA].character,
+						pWaitQueue->mWaitingData[clientA].mapCode
 					);
 				}
 			}

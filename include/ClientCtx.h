@@ -34,6 +34,7 @@ public:
 	}
 
 	bool GetOnlineStatus() { return mIsOnline; }
+	void UnsetOnlineStatus() { mIsOnline = false; }
 
 private:
 	TCPSocketPtr mSock;

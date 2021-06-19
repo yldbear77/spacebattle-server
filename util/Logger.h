@@ -7,10 +7,16 @@
 #include <tchar.h>
 
 namespace Logger {
-	void Log(const char* inFormat, ...);
+	void Log(uint8_t type, const char* inFormat, ...);
 	std::string Sprintf(const char* inFormat, ...);
 }
 
-#define LOG(...) Logger::Log(__VA_ARGS__);
+#define LOG_TYPE_NOTIFY	0
+#define LOG_TYPE_ERROR	1
+#define LOG_TYPE_DEBUG	2
+
+#define LOG_NOTIFY(...)	Logger::Log(LOG_TYPE_NOTIFY, __VA_ARGS__);
+#define LOG_ERROR(...)	Logger::Log(LOG_TYPE_ERROR, __VA_ARGS__);
+#define LOG_DEBUG(...)	Logger::Log(LOG_TYPE_DEBUG, __VA_ARGS__);
 
 #endif

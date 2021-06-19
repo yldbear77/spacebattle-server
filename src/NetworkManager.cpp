@@ -16,6 +16,7 @@ NetworkManager::NetworkManager() :
 }
 
 void NetworkManager::Run(GameManager* pGameManager) {
+	LOG_NOTIFY("네트워크 매니저 시작");
 	mSock->Bind(mAddr);
 	mSock->Listen(15);
 	for (int i = 0; i < (int)mSysInfo.dwNumberOfProcessors; ++i) {
@@ -30,7 +31,15 @@ void NetworkManager::PacketWorker(IOCPPtr pIOCP, NetworkManager* pNetworkManager
 	LPEXT_OVERLAPPED pExtOver;
 
 	while (1) {
-		unsigned ioBytes = pIOCP->GetCompletion(pKeyData, pExtOver);
+		int ioBytes = pIOCP->GetCompletion(pKeyData, pExtOver);
+		if (ioBytes == -ERROR_NETNAME_DELETED) {
+			LOG_NOTIFY("클라이언트 종료: 소켓주소(%s)", pKeyData->clntAddr.ToString().c_str());
+			// TODO: 게임 진행 중 종료하는 경우도 있으므로, 별도로 처리 필요
+			pNetworkManager->DecreaseClntCount();
+			pNetworkManager->mAddrToCcpMap[pKeyData->clntAddr]->UnsetOnlineStatus();
+			pNetworkManager->mAddrToCcpMap.erase(pKeyData->clntAddr);
+			continue;
+		}
 		switch (pExtOver->mode) {
 		case MODE_RECV:
 			if (ioBytes == 0) {
@@ -53,6 +62,8 @@ void NetworkManager::AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkMana
 		SocketAddress clntAddr;
 		TCPSocketPtr pClntSock(pSock->Accept(clntAddr));
 		pClntSock->SetAddr(clntAddr);
+
+		LOG_NOTIFY("클라이언트 접속: 소켓주소(%s)", clntAddr.ToString().c_str());
 
 		pNetworkManager->RegisterClient(pClntSock, clntAddr);
 		pIOCP->ConnectSockToIOCP(pClntSock, clntAddr);
@@ -139,7 +150,10 @@ void NetworkManager::SendMatchSuccessPacket(
 	obsB.WriteBytes(reinterpret_cast<void*>(&sizeNameA), 1);
 	obsB.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(nameA.c_str())), sizeNameA);
 
+	LOG_NOTIFY("매칭 성공 전송: 소켓주소(%s)", clientA->GetSocketAddr().ToString().c_str());
 	clientA->SendPacket(obsA.GetBufferPtr(), obsA.GetByteLength());
+
+	LOG_NOTIFY("매칭 성공 전송: 소켓주소(%s)", clientB->GetSocketAddr().ToString().c_str());
 	clientB->SendPacket(obsB.GetBufferPtr(), obsB.GetByteLength());
 }
 
@@ -153,11 +167,16 @@ void NetworkManager::SendRequestDeployPacket(ClientCtxPtr clientA, ClientCtxPtr 
 	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
 	obs.WriteBytes(reinterpret_cast<void*>(&timeLimit), 1);
 
+	LOG_NOTIFY("배치 요청 전송: 소켓주소(%s)", clientA->GetSocketAddr().ToString().c_str());
 	clientA->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+
+	LOG_NOTIFY("배치 요청 전송: 소켓주소(%s)", clientB->GetSocketAddr().ToString().c_str());
 	clientB->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 }
 
 void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
+	LOG_NOTIFY("대기큐 진입 요청: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+
 	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
 	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
 	

@@ -7,6 +7,8 @@
 #include "ClientCtx.h"
 #include "WaitQueue.h"
 
+#include "../util/Logger.h"
+
 class RoomManager {
 private:
 	struct Room {
@@ -23,6 +25,7 @@ public:
 		return mInstance;
 	}
 
+	void Run();
 	void CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, ClientCtxPtr clientB);
 
 private:
