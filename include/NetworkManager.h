@@ -2,6 +2,7 @@
 #define __NETWORK_MANAGER_H__
 
 #include <unordered_map>
+#include <utility>
 #include <string>
 #include <thread>
 
@@ -9,6 +10,8 @@
 #include "Packet.h"
 #include "ClientCtx.h"
 #include "GameManager.h"
+
+#include "../include/Spacecraft.h"
 
 #include "../net/SocketAddress.h"
 #include "../net/TCPSocket.h"
@@ -65,6 +68,7 @@ private:
 	static void AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkManager* pNetworkManager);
 
 	void HandleRequestConnect(ClientCtxPtr pCc);
+	void HandleResponseDeploy(ClientCtxPtr pCc);
 };
 
 #endif

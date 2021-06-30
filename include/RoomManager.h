@@ -6,17 +6,22 @@
 
 #include "ClientCtx.h"
 #include "WaitQueue.h"
+#include "Character.h"
 
 #include "../util/Logger.h"
 
 class RoomManager {
 private:
 	struct Room {
-		uint16_t roomNumber;									// 방 번호
-		uint8_t	mapCode;										// 맵
-		std::unordered_set<ClientCtxPtr> clients;				// 방에 포함된 클라이언트들의 정보
-		std::unordered_map<ClientCtxPtr, uint8_t> characters;	// 클라이언트별 선택 캐릭터
-		// TODO: 플레이어별 종속적인 정보 저장
+		typedef std::unordered_map<std::pair<uint8_t, uint8_t>, uint8_t> GridMap;
+		Room() {}
+		Room(uint16_t, uint8_t, ClientCtxPtr, ClientCtxPtr);
+		uint16_t roomNumber;
+		uint8_t	mapCode;
+		std::unordered_set<ClientCtxPtr> clients;
+		std::unordered_map<ClientCtxPtr, CharacterPtr> chs;
+		std::unordered_map<ClientCtxPtr, GridMap> oceanGrid;
+		std::unordered_map<ClientCtxPtr, GridMap> targetGrid;
 	};
 
 public:
@@ -29,11 +34,24 @@ public:
 	void CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, ClientCtxPtr clientB);
 
 private:
+	typedef CharacterPtr (RoomManager::*CharacterCreatorPtr)();
+	typedef std::unordered_map<uint8_t, CharacterCreatorPtr> CharacterCreatorPtrMap;
+
 	static RoomManager* mInstance;
 	RoomManager() : mRoomCount(0) {}
 
 	uint16_t mRoomCount;
 	std::unordered_map<uint16_t, Room> mRooms;
+	std::unordered_map<ClientCtxPtr, uint16_t> mParticipatingRoom;
+
+	static CharacterCreatorPtrMap* InitCharacterCreationPtrMap();
+	CharacterCreatorPtr CharacterCreatorLookup(uint8_t);
+	CharacterPtr CreateCharacter(uint8_t);
+
+	CharacterPtr CreateJack() { return std::shared_ptr<Character>(new Jack()); }
+	CharacterPtr CreateKaiser() { return std::shared_ptr<Character>(new Kaiser()); }
+
+	CharacterPtr GetCharacterInfo(uint16_t roomNum, ClientCtxPtr pCc) { return mRooms[roomNum].chs[pCc]; }
 };
 
 #endif

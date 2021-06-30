@@ -2,6 +2,18 @@
 
 RoomManager* RoomManager::mInstance = nullptr;
 
+RoomManager::Room::Room(
+	uint16_t roomNumber,
+	uint8_t mapCode,
+	ClientCtxPtr clientA,
+	ClientCtxPtr clientB) :
+	roomNumber(roomNumber),
+	mapCode(mapCode)
+{
+	clients.insert(clientA);
+	clients.insert(clientB);
+}
+
 void RoomManager::Run() {
 	LOG_NOTIFY("룸 매니저 시작");
 }
@@ -16,13 +28,42 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 		pWaitQueue->mWaitingData[clientA].character,
 		pWaitQueue->mWaitingData[clientB].character
 	);
-	mRooms[++mRoomCount] = Room();
-	
-	Room& newRoom = mRooms[mRoomCount];
-	newRoom.roomNumber = mRoomCount;
-	newRoom.mapCode = pWaitQueue->mWaitingData[clientA].mapCode;
-	newRoom.clients.insert(clientA);
-	newRoom.clients.insert(clientB);
-	newRoom.characters[clientA] = pWaitQueue->mWaitingData[clientA].character;
-	newRoom.characters[clientB] = pWaitQueue->mWaitingData[clientB].character;
+	++mRoomCount;
+	mRooms[mRoomCount] = RoomManager::Room(
+		mRoomCount,
+		pWaitQueue->mWaitingData[clientA].mapCode,
+		clientA,
+		clientB);
+	mRooms[mRoomCount].chs[clientA] =
+		CreateCharacter(pWaitQueue->mWaitingData[clientA].character);
+	mRooms[mRoomCount].chs[clientB] =
+		CreateCharacter(pWaitQueue->mWaitingData[clientB].character);
+	mParticipatingRoom[clientA] = mParticipatingRoom[clientB] = mRoomCount;
+}
+
+RoomManager::CharacterCreatorPtrMap* RoomManager::InitCharacterCreationPtrMap() {
+	CharacterCreatorPtrMap* pCcpm = new CharacterCreatorPtrMap;
+
+	(*pCcpm)[Character::JACK] = &RoomManager::CreateJack;
+	(*pCcpm)[Character::KAISER] = &RoomManager::CreateKaiser;
+
+	return pCcpm;
+}
+
+RoomManager::CharacterCreatorPtr RoomManager::CharacterCreatorLookup(uint8_t chCode) {
+	static std::shared_ptr<CharacterCreatorPtrMap>
+		creationPtrMap(InitCharacterCreationPtrMap());
+
+	CharacterCreatorPtrMap::iterator mapEntry =
+		creationPtrMap->find(chCode);
+
+	if (mapEntry == creationPtrMap->end()) return nullptr;
+	return (*mapEntry).second;
+}
+
+CharacterPtr RoomManager::CreateCharacter(uint8_t chCode) {
+	CharacterCreatorPtr pCcp = CharacterCreatorLookup(chCode);
+
+	if (pCcp) return (this->*pCcp)();
+	else return nullptr;
 }

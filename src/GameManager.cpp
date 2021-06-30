@@ -1,11 +1,14 @@
 #include "../include/GameManager.h"
 
+
 GameManager* GameManager::mInstance = nullptr;
+
 
 GameManager::GameManager() {
 	mRoomManager = RoomManager::GetInstance();
 	pNetworkManager = NetworkManager::GetInstance();
 }
+
 
 void GameManager::Run() {
 	LOG_NOTIFY("게임 매니저 시작");
@@ -15,16 +18,6 @@ void GameManager::Run() {
 	std::thread(CreateGame, &mQMapB, this).detach();
 }
 
-void GameManager::EnqueueWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t character, uint8_t mapCode) {
-	switch (mapCode) {
-	case MAP_10_10:
-		mQMapA.Enqueue(pCc, name, character, mapCode);
-		break;
-	case MAP_20_20:
-		mQMapB.Enqueue(pCc, name, character, mapCode);
-		break;
-	}
-}
 
 void GameManager::CreateGame(WaitQueue* pWaitQueue, GameManager* pGameManager) {
 	while (1) {
@@ -73,4 +66,31 @@ void GameManager::CreateGame(WaitQueue* pWaitQueue, GameManager* pGameManager) {
 		}
 		pWaitQueue->mMutex.unlock();
 	}
+}
+
+
+void GameManager::EnqueueWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t character, uint8_t mapCode) {
+	switch (mapCode) {
+	case MAP_10_10:
+		mQMapA.Enqueue(pCc, name, character, mapCode);
+		break;
+	case MAP_20_20:
+		mQMapB.Enqueue(pCc, name, character, mapCode);
+		break;
+	}
+}
+
+
+void GameManager::DeploySpacecraft(ClientCtxPtr pCc, InitialDeployData& coords) {
+	for (auto& a : coords) {
+		std::string s = "종류(" + Spacecraft::craftInfo[a.first].first + "), ";
+		s += "좌표(";
+		for (auto& b : a.second) {
+			s += "[" + std::to_string(b.first) + ", " + std::to_string(b.second) + "], ";
+		}
+		s += ")";
+		LOG_NOTIFY("배치 응답 결과: %s", s.c_str());
+	}
+
+
 }

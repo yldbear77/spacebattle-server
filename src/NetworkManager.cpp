@@ -1,6 +1,8 @@
 #include "../include/NetworkManager.h"
 
+
 NetworkManager* NetworkManager::mInstance = nullptr;
+
 
 NetworkManager::NetworkManager() :
 	mServIP(SERVER_IP),
@@ -15,6 +17,7 @@ NetworkManager::NetworkManager() :
 	mAddr = SocketAddress(mServIP, mServPort);
 }
 
+
 void NetworkManager::Run(GameManager* pGameManager) {
 	LOG_NOTIFY("네트워크 매니저 시작");
 	mSock->Bind(mAddr);
@@ -25,6 +28,7 @@ void NetworkManager::Run(GameManager* pGameManager) {
 	std::thread(AcceptWorker, mSock, mIOCP, this).detach();
 	mGameManager = pGameManager;
 }
+
 
 void NetworkManager::PacketWorker(IOCPPtr pIOCP, NetworkManager* pNetworkManager) {
 	LPIOCP_KEY_DATA pKeyData;
@@ -57,6 +61,7 @@ void NetworkManager::PacketWorker(IOCPPtr pIOCP, NetworkManager* pNetworkManager
 	}
 }
 
+
 void NetworkManager::AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkManager* pNetworkManager) {
 	while (1) {
 		SocketAddress clntAddr;
@@ -71,6 +76,7 @@ void NetworkManager::AcceptWorker(TCPSocketPtr pSock, IOCPPtr pIOCP, NetworkMana
 		pClntSock->Receive();
 	}
 }
+
 
 void NetworkManager::ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, int remainingBytes) {
 	ClientCtxPtr pCc = mAddrToCcpMap[clntAddr];
@@ -106,13 +112,18 @@ void NetworkManager::ConstructPacket(SocketAddress clntAddr, uint8_t* ioBuffer, 
 	}
 }
 
+
 void NetworkManager::ProcessPacket(ClientCtxPtr pCc) {
 	switch (pCc->GetPacketType<PACKET_SIZE, PACKET_TYPE>()) {
 	case CS_REQ_CONNECT:
 		HandleRequestConnect(pCc);
 		break;
+	case CS_RES_DEPLOY:
+		HandleResponseDeploy(pCc);
+		break;
 	}
 }
+
 
 void NetworkManager::SendMatchSuccessPacket(
 	ClientCtxPtr clientA,
@@ -159,6 +170,7 @@ void NetworkManager::SendMatchSuccessPacket(
 	clientB->SendPacket(obsB.GetBufferPtr(), obsB.GetByteLength());
 }
 
+
 void NetworkManager::SendRequestDeployPacket(ClientCtxPtr clientA, ClientCtxPtr clientB) {
 	uint16_t size = 4;
 	uint8_t type = SC_REQ_DEPLOY;
@@ -176,8 +188,9 @@ void NetworkManager::SendRequestDeployPacket(ClientCtxPtr clientA, ClientCtxPtr 
 	clientB->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 }
 
+
 void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
-	LOG_NOTIFY("대기큐 진입 요청: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+	LOG_NOTIFY("큐 진입 요청 수신: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
 
 	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
 	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
@@ -206,5 +219,33 @@ void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
 	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
 	obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 
+	LOG_NOTIFY("큐 진입 응답 전송: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
 	pCc->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+}
+
+
+void NetworkManager::HandleResponseDeploy(ClientCtxPtr pCc) {
+	LOG_NOTIFY("배치 응답 수신: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+
+	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
+	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
+
+	InputBitStream ibs(payload, payloadSize);
+
+	std::unordered_map<uint8_t, std::vector<std::pair<uint8_t, uint8_t>>> coords;
+	uint8_t numOfSpacecrafts;
+	
+	ibs.ReadBytes(reinterpret_cast<void*>(&numOfSpacecrafts), 1);
+	for (int craftCount = 0; craftCount < numOfSpacecrafts; ++craftCount) {
+		uint8_t craft;
+		ibs.ReadBytes(reinterpret_cast<void*>(&craft), 1);
+		for (int craftCoordCount = 0; craftCoordCount < Spacecraft::craftInfo[craft].second; ++craftCoordCount) {
+			uint8_t y, x;
+			ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
+			ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+			coords[craft].push_back(std::make_pair(x, y));
+		}
+	}
+
+	mGameManager->DeploySpacecraft(pCc, coords);
 }
