@@ -9,6 +9,7 @@
 #include "WaitQueue.h"
 #include "RoomManager.h"
 #include "NetworkManager.h"
+#include "Character.h"
 
 class GameManager {
 public:
@@ -20,8 +21,6 @@ public:
 	void Run();
 
 private:
-	typedef std::unordered_map<uint8_t, std::vector<std::pair<uint8_t, uint8_t>>> InitialDeployData;
-
 	friend class NetworkManager;
 
 	static GameManager* mInstance;
@@ -34,7 +33,9 @@ private:
 	static void CreateGame(WaitQueue* pWaitQueue, GameManager* pGameManager);
 	
 	void EnqueueWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t character, uint8_t mapCode);
-	void DeploySpacecraft(ClientCtxPtr pCc, InitialDeployData& coords);
+	void InitializeDeploy(ClientCtxPtr pCc, std::vector<RoomManager::DeployData> deployData) {
+		mRoomManager->InitializeDeploy(pCc, deployData);
+	}
 };
 
 #endif

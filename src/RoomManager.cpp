@@ -1,6 +1,8 @@
 #include "../include/RoomManager.h"
 
+
 RoomManager* RoomManager::mInstance = nullptr;
+
 
 RoomManager::Room::Room(
 	uint16_t roomNumber,
@@ -14,9 +16,11 @@ RoomManager::Room::Room(
 	clients.insert(clientB);
 }
 
+
 void RoomManager::Run() {
 	LOG_NOTIFY("룸 매니저 시작");
 }
+
 
 void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, ClientCtxPtr clientB) {
 	LOG_NOTIFY(
@@ -41,6 +45,13 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 	mParticipatingRoom[clientA] = mParticipatingRoom[clientB] = mRoomCount;
 }
 
+
+void RoomManager::InitializeDeploy(ClientCtxPtr pCc, std::vector<DeployData>& deployData) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	
+}
+
+
 RoomManager::CharacterCreatorPtrMap* RoomManager::InitCharacterCreationPtrMap() {
 	CharacterCreatorPtrMap* pCcpm = new CharacterCreatorPtrMap;
 
@@ -49,6 +60,7 @@ RoomManager::CharacterCreatorPtrMap* RoomManager::InitCharacterCreationPtrMap() 
 
 	return pCcpm;
 }
+
 
 RoomManager::CharacterCreatorPtr RoomManager::CharacterCreatorLookup(uint8_t chCode) {
 	static std::shared_ptr<CharacterCreatorPtrMap>
@@ -60,6 +72,7 @@ RoomManager::CharacterCreatorPtr RoomManager::CharacterCreatorLookup(uint8_t chC
 	if (mapEntry == creationPtrMap->end()) return nullptr;
 	return (*mapEntry).second;
 }
+
 
 CharacterPtr RoomManager::CreateCharacter(uint8_t chCode) {
 	CharacterCreatorPtr pCcp = CharacterCreatorLookup(chCode);

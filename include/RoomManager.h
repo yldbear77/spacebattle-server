@@ -25,6 +25,12 @@ private:
 	};
 
 public:
+	struct DeployData {
+		uint8_t craft;
+		uint8_t dir;
+		std::pair<uint8_t, uint8_t> keyDeck;
+	};
+
 	static RoomManager* GetInstance() {
 		if (mInstance == nullptr) mInstance = new RoomManager();
 		return mInstance;
@@ -33,7 +39,13 @@ public:
 	void Run();
 	void CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, ClientCtxPtr clientB);
 
+	CharacterPtr GetCharacterInfo(uint16_t roomNum, ClientCtxPtr pCc) { return mRooms[roomNum].chs[pCc]; }
+	uint16_t GetClientParticipatingRoom(ClientCtxPtr pCc) { return mParticipatingRoom[pCc]; }
+
+	void InitializeDeploy(ClientCtxPtr pCc, std::vector<DeployData>& data);
+
 private:
+
 	typedef CharacterPtr (RoomManager::*CharacterCreatorPtr)();
 	typedef std::unordered_map<uint8_t, CharacterCreatorPtr> CharacterCreatorPtrMap;
 
@@ -50,8 +62,6 @@ private:
 
 	CharacterPtr CreateJack() { return std::shared_ptr<Character>(new Jack()); }
 	CharacterPtr CreateKaiser() { return std::shared_ptr<Character>(new Kaiser()); }
-
-	CharacterPtr GetCharacterInfo(uint16_t roomNum, ClientCtxPtr pCc) { return mRooms[roomNum].chs[pCc]; }
 };
 
 #endif

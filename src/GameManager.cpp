@@ -79,18 +79,3 @@ void GameManager::EnqueueWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t ch
 		break;
 	}
 }
-
-
-void GameManager::DeploySpacecraft(ClientCtxPtr pCc, InitialDeployData& coords) {
-	for (auto& a : coords) {
-		std::string s = "종류(" + Spacecraft::craftInfo[a.first].first + "), ";
-		s += "좌표(";
-		for (auto& b : a.second) {
-			s += "[" + std::to_string(b.first) + ", " + std::to_string(b.second) + "], ";
-		}
-		s += ")";
-		LOG_NOTIFY("배치 응답 결과: %s", s.c_str());
-	}
-
-
-}

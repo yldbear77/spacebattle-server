@@ -17,12 +17,12 @@ public:
 		SPACE_STATION
 	};
 
-	Spacecraft() {}
+	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name) {}
 
 	static std::unordered_map<uint8_t, std::pair<std::string, uint8_t>> craftInfo;
 
-	//const uint8_t mCode;
-	//const std::string mName;
+	const uint8_t mCode;
+	const std::string mName;
 
 	virtual void Deploy() {};
 	virtual void BeAttacked() {};

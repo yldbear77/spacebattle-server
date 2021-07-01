@@ -232,20 +232,18 @@ void NetworkManager::HandleResponseDeploy(ClientCtxPtr pCc) {
 
 	InputBitStream ibs(payload, payloadSize);
 
-	std::unordered_map<uint8_t, std::vector<std::pair<uint8_t, uint8_t>>> coords;
 	uint8_t numOfSpacecrafts;
+	std::vector<RoomManager::DeployData> deployData;
 	
 	ibs.ReadBytes(reinterpret_cast<void*>(&numOfSpacecrafts), 1);
-	for (int craftCount = 0; craftCount < numOfSpacecrafts; ++craftCount) {
-		uint8_t craft;
-		ibs.ReadBytes(reinterpret_cast<void*>(&craft), 1);
-		for (int craftCoordCount = 0; craftCoordCount < Spacecraft::craftInfo[craft].second; ++craftCoordCount) {
-			uint8_t y, x;
-			ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
-			ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
-			coords[craft].push_back(std::make_pair(x, y));
-		}
+	for (int craftIdx = 0; craftIdx < numOfSpacecrafts; ++craftIdx) {
+		RoomManager::DeployData dd;
+		ibs.ReadBytes(reinterpret_cast<void*>(&(dd.craft)), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&(dd.dir)), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&(dd.keyDeck.first)), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&(dd.keyDeck.second)), 1);
+		deployData.push_back(dd);
 	}
 
-	mGameManager->DeploySpacecraft(pCc, coords);
+	mGameManager->InitializeDeploy(pCc, deployData);
 }

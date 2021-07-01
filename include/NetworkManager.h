@@ -10,6 +10,7 @@
 #include "Packet.h"
 #include "ClientCtx.h"
 #include "GameManager.h"
+#include "RoomManager.h"
 
 #include "../include/Spacecraft.h"
 
