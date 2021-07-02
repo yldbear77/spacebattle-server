@@ -8,6 +8,8 @@
 #include <string>
 
 class Spacecraft {
+private:
+
 public:
 	enum {
 		FIGHTER_JET = 1,
@@ -20,6 +22,7 @@ public:
 	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name) {}
 
 	static std::unordered_map<uint8_t, std::pair<std::string, uint8_t>> craftInfo;
+	static std::unordered_map<uint8_t, std::vector<std::vector<std::pair<int, int>>>> deployRule;
 
 	const uint8_t mCode;
 	const std::string mName;
