@@ -8,8 +8,6 @@
 #include <string>
 
 class Spacecraft {
-private:
-
 public:
 	enum {
 		FIGHTER_JET = 1,
@@ -19,7 +17,10 @@ public:
 		SPACE_STATION
 	};
 
-	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name) {}
+	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name)
+	{
+		CreateDecks(code);
+	}
 
 	static std::unordered_map<uint8_t, std::pair<std::string, uint8_t>> craftInfo;
 	static std::unordered_map<uint8_t, std::vector<std::vector<std::pair<int, int>>>> deployRule;
@@ -29,6 +30,17 @@ public:
 
 	virtual void Deploy() {};
 	virtual void BeAttacked() {};
+
+private:
+	struct Deck {
+		uint8_t armor;
+	};
+
+	std::vector<Deck> mDecks;
+
+	void CreateDecks(uint8_t code) {
+		for (int idx = 0; idx < craftInfo[code].second; ++idx) mDecks.push_back(Deck{ 1 });
+	}
 };
 
 typedef std::shared_ptr<Spacecraft> SpacecraftPtr;

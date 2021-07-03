@@ -22,7 +22,14 @@ public:
 	const std::string mName;
 
 	uint8_t mCraftCount;
-	std::vector<SpacecraftPtr> mCreatedCrafts;
+	std::vector<Spacecraft> mSpacecrafts;
+
+	uint8_t GetCraftCount() const { return mCraftCount; }
+	void CreateSpacecraft(uint8_t craft) {
+		Spacecraft spc = Spacecraft(craft, Spacecraft::craftInfo[craft].first);
+		mSpacecrafts.push_back(spc);
+		++mCraftCount;
+	}
 
 	virtual void UseSkill() = 0;
 };

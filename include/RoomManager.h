@@ -3,25 +3,33 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <set>
+#include <map>
 
 #include "ClientCtx.h"
 #include "WaitQueue.h"
 #include "Character.h"
+#include "Spacecraft.h"
 
 #include "../util/Logger.h"
 
 class RoomManager {
 private:
+	struct PosInfo {
+		uint8_t craftNum;
+		uint8_t deckNum;
+	};
+
 	struct Room {
-		typedef std::unordered_map<std::pair<uint8_t, uint8_t>, uint8_t> GridMap;
+		typedef std::map<std::pair<uint8_t, uint8_t>, PosInfo> GridMap;
 		Room() {}
 		Room(uint16_t, uint8_t, ClientCtxPtr, ClientCtxPtr);
 		uint16_t roomNumber;
 		uint8_t	mapCode;
-		std::unordered_set<ClientCtxPtr> clients;
-		std::unordered_map<ClientCtxPtr, CharacterPtr> chs;
-		std::unordered_map<ClientCtxPtr, GridMap> oceanGrid;
-		std::unordered_map<ClientCtxPtr, GridMap> targetGrid;
+		std::set<ClientCtxPtr> clients;
+		std::map<ClientCtxPtr, CharacterPtr> chs;
+		std::map<ClientCtxPtr, GridMap> oceanGrid;
+		std::map<ClientCtxPtr, GridMap> targetGrid;
 	};
 
 public:

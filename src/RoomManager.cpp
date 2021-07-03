@@ -48,7 +48,17 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 
 void RoomManager::InitializeDeploy(ClientCtxPtr pCc, std::vector<DeployData>& deployData) {
 	uint16_t roomNum = GetClientParticipatingRoom(pCc);
-	
+	Room& room = mRooms[roomNum];
+	CharacterPtr ch = GetCharacterInfo(roomNum, pCc);
+	for (auto& dd : deployData) {
+		uint8_t craftSize = Spacecraft::craftInfo[dd.craft].second;
+		for (uint8_t deckIdx = 0; deckIdx < craftSize; ++deckIdx) {
+			uint8_t x = dd.keyDeck.first + Spacecraft::deployRule[dd.craft][dd.dir][deckIdx].first;
+			uint8_t y = dd.keyDeck.second + Spacecraft::deployRule[dd.craft][dd.dir][deckIdx].second;
+			room.oceanGrid[pCc][std::make_pair(x, y)] = PosInfo{ ch->GetCraftCount(), deckIdx };
+		}
+		ch->CreateSpacecraft(dd.craft);
+	}
 }
 
 
