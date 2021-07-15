@@ -4,21 +4,9 @@
 RoomManager* RoomManager::mInstance = nullptr;
 
 
-RoomManager::Room::Room(
-	uint16_t roomNumber,
-	uint8_t mapCode,
-	ClientCtxPtr clientA,
-	ClientCtxPtr clientB) :
-	roomNumber(roomNumber),
-	mapCode(mapCode)
-{
-	clients.insert(clientA);
-	clients.insert(clientB);
-}
-
-
 void RoomManager::Run() {
 	LOG_NOTIFY("룸 매니저 시작");
+	gen = std::mt19937(gen());
 }
 
 
@@ -33,32 +21,59 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 		pWaitQueue->mWaitingData[clientB].character
 	);
 	++mRoomCount;
-	mRooms[mRoomCount] = RoomManager::Room(
-		mRoomCount,
-		pWaitQueue->mWaitingData[clientA].mapCode,
-		clientA,
-		clientB);
+
+	if (mRooms.find(mRoomCount) == mRooms.end()) mRooms.erase(mRoomCount);
+
+	mRooms[mRoomCount].roomNumber = mRoomCount;
+	mRooms[mRoomCount].mapCode = pWaitQueue->mWaitingData[clientA].mapCode;
+	mRooms[mRoomCount].deployedNum = 0;
+	mRooms[mRoomCount].clients.insert(clientA);
+	mRooms[mRoomCount].clients.insert(clientB);
 	mRooms[mRoomCount].chs[clientA] =
 		CreateCharacter(pWaitQueue->mWaitingData[clientA].character);
 	mRooms[mRoomCount].chs[clientB] =
 		CreateCharacter(pWaitQueue->mWaitingData[clientB].character);
 	mParticipatingRoom[clientA] = mParticipatingRoom[clientB] = mRoomCount;
+
+	const std::string clntAName = pWaitQueue->mWaitingData[clientA].name;
+	const std::string clntBName = pWaitQueue->mWaitingData[clientB].name;
+
+	mRooms[mRoomCount].clientName[clientA] = clntAName;
+	mRooms[mRoomCount].clientName[clientB] = clntBName;
+
+	std::uniform_int_distribution<int> dis(0, 1);
+	(dis(gen) == 0) ? mRooms[mRoomCount].turnOwner = clntAName : mRooms[mRoomCount].turnOwner = clntBName;
 }
 
 
 void RoomManager::InitializeDeploy(ClientCtxPtr pCc, std::vector<DeployData>& deployData) {
 	uint16_t roomNum = GetClientParticipatingRoom(pCc);
-	Room& room = mRooms[roomNum];
+
 	CharacterPtr ch = GetCharacterInfo(roomNum, pCc);
+
 	for (auto& dd : deployData) {
 		uint8_t craftSize = Spacecraft::craftInfo[dd.craft].second;
+		mRooms[roomNum].deloyStatus[pCc].push_back(dd);
 		for (uint8_t deckIdx = 0; deckIdx < craftSize; ++deckIdx) {
 			uint8_t x = dd.keyDeck.first + Spacecraft::deployRule[dd.craft][dd.dir][deckIdx].first;
 			uint8_t y = dd.keyDeck.second + Spacecraft::deployRule[dd.craft][dd.dir][deckIdx].second;
-			room.oceanGrid[pCc][std::make_pair(x, y)] = PosInfo{ ch->GetCraftCount(), deckIdx };
+			mRooms[roomNum].oceanGrid[pCc][std::make_pair(x, y)] = PosInfo{ ch->GetCraftCount(), deckIdx };
 		}
 		ch->CreateSpacecraft(dd.craft);
 	}
+}
+
+
+bool RoomManager::CheckDeployCompletion(ClientCtxPtr pCc) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	mRooms[roomNum].deployCompletionCheckMtx.lock();
+	if (++(mRooms[roomNum].deployedNum) >= 2) {
+		mRooms[roomNum].deployedNum = 0;
+		mRooms[roomNum].deployCompletionCheckMtx.unlock();
+		return true;
+	}
+	mRooms[roomNum].deployCompletionCheckMtx.unlock();
+	return false;
 }
 
 

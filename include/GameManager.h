@@ -2,6 +2,7 @@
 #define __GAME_MANAGER_H__
 
 #include <string>
+#include <set>
 #include <thread>
 
 #include "Config.h"
@@ -36,6 +37,11 @@ private:
 	void InitializeDeploy(ClientCtxPtr pCc, std::vector<RoomManager::DeployData> deployData) {
 		mRoomManager->InitializeDeploy(pCc, deployData);
 	}
+	bool CheckDeployCompletion(ClientCtxPtr pCc) { return mRoomManager->CheckDeployCompletion(pCc); }
+
+	std::vector<RoomManager::DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRoomManager->GetDeployStatus(pCc); }
+	std::set<ClientCtxPtr> GetParticipatingClients(ClientCtxPtr pCc) { return mRoomManager->GetParticipatingClients(pCc); }
+	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRoomManager->GetTurnOwner(pCc); }
 };
 
 #endif

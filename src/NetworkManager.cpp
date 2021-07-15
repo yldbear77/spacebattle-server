@@ -243,7 +243,53 @@ void NetworkManager::HandleResponseDeploy(ClientCtxPtr pCc) {
 		ibs.ReadBytes(reinterpret_cast<void*>(&(dd.keyDeck.first)), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&(dd.keyDeck.second)), 1);
 		deployData.push_back(dd);
+		LOG_NOTIFY(
+			"배치 내용: 소켓주소(%s), 전투기 코드(%d), 방향(%d), 키 갑판 좌표(%d, %d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			dd.craft,
+			dd.dir,
+			dd.keyDeck.first,
+			dd.keyDeck.second
+		);
 	}
 
 	mGameManager->InitializeDeploy(pCc, deployData);
+	if (mGameManager->CheckDeployCompletion(pCc)) {
+		// 배치 결과 전송
+		std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
+		for (auto& c : clients) {
+			std::vector<RoomManager::DeployData> ds = mGameManager->GetDeployStatus(c);
+			OutputBitStream obs;
+			PACKET_SIZE size = sizeof(PACKET_SIZE)
+				+ sizeof(PACKET_TYPE)
+				+ 1
+				+ sizeof(RoomManager::DeployData) * ds.size();
+			PACKET_TYPE type = SC_DEPLOY_RESULT;
+			uint8_t numOfSpacecrafts = ds.size();
+			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&numOfSpacecrafts), 1);
+			for (auto& dd : ds) {
+				obs.WriteBytes(reinterpret_cast<void*>(&(dd.craft)), 1);
+				obs.WriteBytes(reinterpret_cast<void*>(&(dd.dir)), 1);
+				obs.WriteBytes(reinterpret_cast<void*>(&(dd.keyDeck.first)), 1);
+				obs.WriteBytes(reinterpret_cast<void*>(&(dd.keyDeck.second)), 1);
+			}
+			c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+		}
+
+		// 배틀 페이즈 시작 알림 전송
+		std::string turnOwner = mGameManager->GetTurnOwner(pCc);
+		for (auto& c : clients) {
+			OutputBitStream obs;
+			PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 +  turnOwner.size();
+			PACKET_TYPE type = SC_START_BP;
+			uint8_t len = turnOwner.size();
+			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&len), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(turnOwner.c_str())), len);
+			pCc->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+		}
+	}
 }

@@ -19,7 +19,9 @@ public:
 
 	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name)
 	{
-		CreateDecks(code);
+		for (int idx = 0; idx < craftInfo[code].second; ++idx) {
+			mDecks.push_back(Deck{ 1 });
+		}
 	}
 
 	static std::unordered_map<uint8_t, std::pair<std::string, uint8_t>> craftInfo;
@@ -28,8 +30,7 @@ public:
 	const uint8_t mCode;
 	const std::string mName;
 
-	virtual void Deploy() {};
-	virtual void BeAttacked() {};
+	void BeAttacked() {};
 
 private:
 	struct Deck {
@@ -37,10 +38,6 @@ private:
 	};
 
 	std::vector<Deck> mDecks;
-
-	void CreateDecks(uint8_t code) {
-		for (int idx = 0; idx < craftInfo[code].second; ++idx) mDecks.push_back(Deck{ 1 });
-	}
 };
 
 typedef std::shared_ptr<Spacecraft> SpacecraftPtr;
