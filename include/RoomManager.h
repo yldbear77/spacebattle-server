@@ -41,7 +41,8 @@ private:
 		uint8_t deployedNum;
 		std::mutex deployCompletionCheckMtx;
 
-		// 클라이언트 별 캐릭터, 현재 배치 상태, target grid, ocean grid
+		// 상대방 소켓주소, 클라이언트 별 캐릭터, 현재 배치 상태, target grid, ocean grid
+		std::map<ClientCtxPtr, ClientCtxPtr> opponent;
 		std::map<ClientCtxPtr, CharacterPtr> chs;
 		std::map<ClientCtxPtr, std::vector<DeployData>> deloyStatus;
 		std::map<ClientCtxPtr, GridMap> oceanGrid;
@@ -70,6 +71,8 @@ public:
 
 	std::vector<DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].deloyStatus[pCc]; }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].turnOwner; }
+
+	bool Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 
 	//void Redeploy(ClientCtxPtr pCc, uint8_t newKeyDeckX, uint8_t newKeyDeckY) {}
 

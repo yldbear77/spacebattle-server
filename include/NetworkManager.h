@@ -70,6 +70,8 @@ private:
 
 	void HandleRequestConnect(ClientCtxPtr pCc);
 	void HandleResponseDeploy(ClientCtxPtr pCc);
+	void HandleRequestAttack(ClientCtxPtr pCc);
+	void HandleRequestSkill(ClientCtxPtr pCc);
 };
 
 #endif

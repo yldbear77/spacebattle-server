@@ -29,6 +29,10 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 	mRooms[mRoomCount].deployedNum = 0;
 	mRooms[mRoomCount].clients.insert(clientA);
 	mRooms[mRoomCount].clients.insert(clientB);
+
+	mRooms[mRoomCount].opponent[clientA] = clientB;
+	mRooms[mRoomCount].opponent[clientB] = clientA;
+
 	mRooms[mRoomCount].chs[clientA] =
 		CreateCharacter(pWaitQueue->mWaitingData[clientA].character);
 	mRooms[mRoomCount].chs[clientB] =
@@ -74,6 +78,11 @@ bool RoomManager::CheckDeployCompletion(ClientCtxPtr pCc) {
 	}
 	mRooms[roomNum].deployCompletionCheckMtx.unlock();
 	return false;
+}
+
+
+bool RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+	return true;
 }
 
 

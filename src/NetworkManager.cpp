@@ -121,6 +121,12 @@ void NetworkManager::ProcessPacket(ClientCtxPtr pCc) {
 	case CS_RES_DEPLOY:
 		HandleResponseDeploy(pCc);
 		break;
+	case CS_REQ_ATTACK:
+		HandleRequestAttack(pCc);
+		break;
+	case CS_REQ_SKILL:
+		HandleRequestSkill(pCc);
+		break;
 	}
 }
 
@@ -172,14 +178,14 @@ void NetworkManager::SendMatchSuccessPacket(
 
 
 void NetworkManager::SendRequestDeployPacket(ClientCtxPtr clientA, ClientCtxPtr clientB) {
-	uint16_t size = 4;
+	uint16_t size = 5;
 	uint8_t type = SC_REQ_DEPLOY;
-	uint8_t timeLimit = DEPLOY_TIME;
+	uint16_t timeLimit = DEPLOY_TIME;
 
 	OutputBitStream obs;
 	obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
 	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
-	obs.WriteBytes(reinterpret_cast<void*>(&timeLimit), 1);
+	obs.WriteBytes(reinterpret_cast<void*>(&timeLimit), 2);
 
 	LOG_NOTIFY("배치 요청 전송: 소켓주소(%s)", clientA->GetSocketAddr().ToString().c_str());
 	clientA->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
@@ -257,39 +263,67 @@ void NetworkManager::HandleResponseDeploy(ClientCtxPtr pCc) {
 	if (mGameManager->CheckDeployCompletion(pCc)) {
 		// 배치 결과 전송
 		std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
-		for (auto& c : clients) {
-			std::vector<RoomManager::DeployData> ds = mGameManager->GetDeployStatus(c);
-			OutputBitStream obs;
-			PACKET_SIZE size = sizeof(PACKET_SIZE)
-				+ sizeof(PACKET_TYPE)
-				+ 1
-				+ sizeof(RoomManager::DeployData) * ds.size();
-			PACKET_TYPE type = SC_DEPLOY_RESULT;
-			uint8_t numOfSpacecrafts = ds.size();
-			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
-			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&numOfSpacecrafts), 1);
-			for (auto& dd : ds) {
-				obs.WriteBytes(reinterpret_cast<void*>(&(dd.craft)), 1);
-				obs.WriteBytes(reinterpret_cast<void*>(&(dd.dir)), 1);
-				obs.WriteBytes(reinterpret_cast<void*>(&(dd.keyDeck.first)), 1);
-				obs.WriteBytes(reinterpret_cast<void*>(&(dd.keyDeck.second)), 1);
-			}
-			c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
-		}
+		//for (auto& c : clients) {
+		//	std::vector<RoomManager::DeployData> ds = mGameManager->GetDeployStatus(c);
+		//	OutputBitStream obs;
+		//	PACKET_SIZE size = sizeof(PACKET_SIZE)
+		//		+ sizeof(PACKET_TYPE)
+		//		+ 1
+		//		+ sizeof(RoomManager::DeployData) * ds.size();
+		//	PACKET_TYPE type = SC_DEPLOY_RESULT;
+		//	uint8_t numOfSpacecrafts = ds.size();
+		//	obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+		//	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+		//	obs.WriteBytes(reinterpret_cast<void*>(&numOfSpacecrafts), 1);
+		//	for (auto& dd : ds) {
+		//		obs.WriteBytes(reinterpret_cast<void*>(&(dd.craft)), 1);
+		//		obs.WriteBytes(reinterpret_cast<void*>(&(dd.dir)), 1);
+		//		obs.WriteBytes(reinterpret_cast<void*>(&(dd.keyDeck.first)), 1);
+		//		obs.WriteBytes(reinterpret_cast<void*>(&(dd.keyDeck.second)), 1);
+		//	}
+		//	c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+		//}
 
 		// 배틀 페이즈 시작 알림 전송
 		std::string turnOwner = mGameManager->GetTurnOwner(pCc);
 		for (auto& c : clients) {
+			LOG_NOTIFY("배틀페이즈 시작: 소켓주소(%s)", c->GetSocketAddr().ToString().c_str());
 			OutputBitStream obs;
-			PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 +  turnOwner.size();
+			PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + turnOwner.size();
 			PACKET_TYPE type = SC_START_BP;
 			uint8_t len = turnOwner.size();
 			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
 			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
 			obs.WriteBytes(reinterpret_cast<void*>(&len), 1);
 			obs.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(turnOwner.c_str())), len);
-			pCc->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+			c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 		}
 	}
+}
+
+
+void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
+	LOG_NOTIFY("공격 요청 수신: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+
+	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
+	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
+
+	InputBitStream ibs(payload, payloadSize);
+
+	uint8_t x, y;
+	ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
+	ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+
+	// mGameManager->Attack(pCc, x, y);
+	// TODO: 공격 결과 송신
+}
+
+
+void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
+	LOG_NOTIFY("스킬 요청 수신: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+
+	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
+	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
+
+	InputBitStream ibs(payload, payloadSize);
 }
