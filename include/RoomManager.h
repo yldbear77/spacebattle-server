@@ -71,8 +71,12 @@ public:
 
 	std::vector<DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].deloyStatus[pCc]; }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].turnOwner; }
+	ClientCtxPtr GetOpponent(ClientCtxPtr pCc) {
+		// TODO: 클라이언트가 게임에 참여 중인이 유효성 검증 필요
+		return mRooms[GetClientParticipatingRoom(pCc)].opponent[pCc];
+	}
 
-	bool Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y);
+	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 
 	//void Redeploy(ClientCtxPtr pCc, uint8_t newKeyDeckX, uint8_t newKeyDeckY) {}
 

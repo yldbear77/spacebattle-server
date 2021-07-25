@@ -21,9 +21,6 @@ public:
 	const uint8_t mCode;
 	const std::string mName;
 
-	uint8_t mCraftCount;
-	std::vector<Spacecraft> mSpacecrafts;
-
 	uint8_t GetCraftCount() const { return mCraftCount; }
 	void CreateSpacecraft(uint8_t craft) {
 		Spacecraft spc = Spacecraft(craft, Spacecraft::craftInfo[craft].first);
@@ -31,7 +28,15 @@ public:
 		++mCraftCount;
 	}
 
+	uint8_t BeAttacked(uint8_t craftNum, uint8_t deckNum) {
+		return mSpacecrafts[craftNum].GetDamaged(deckNum);
+	}
+
 	virtual void UseSkill() = 0;
+
+protected:
+	uint8_t mCraftCount;
+	std::vector<Spacecraft> mSpacecrafts;
 };
 
 class Jack : public Character {

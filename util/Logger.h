@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdarg>
 #include <tchar.h>
+#include <ctime>
 
 namespace Logger {
 	void Log(uint8_t type, const char* inFormat, ...);

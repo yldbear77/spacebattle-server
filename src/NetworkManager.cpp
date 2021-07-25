@@ -314,8 +314,30 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 	ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
 	ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
 
-	// mGameManager->Attack(pCc, x, y);
-	// TODO: 공격 결과 송신
+	uint8_t resCode;
+	switch (mGameManager->Attack(pCc, x, y)) {
+	case 0:		// 실패
+		resCode = RES_FAILED;
+		break;
+	case 1:		// 이미 침몰한 갑판 공격
+		resCode = ALREADY_DESTROYED;
+		break;
+	case 2:		// 성공
+		resCode = RES_SUCCESS;
+		break;
+	}
+
+	OutputBitStream obs;
+	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1 + 1;
+	PACKET_TYPE type = SC_RES_ATTACK;
+
+	obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+	obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+	obs.WriteBytes(reinterpret_cast<void*>(&x), 1);
+	obs.WriteBytes(reinterpret_cast<void*>(&y), 1);
+
+	pCc->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 }
 
 
@@ -326,4 +348,7 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 	const uint32_t payloadSize = pCc->GetPayloadSizeInBits<PACKET_SIZE, PACKET_TYPE>();
 
 	InputBitStream ibs(payload, payloadSize);
+
+	// TODO: 스킬의 종류에 따라 패킷을 다르게 파싱
+	// TODO: 턴 주인 변경 후, 턴 넘김 패킷 전송
 }

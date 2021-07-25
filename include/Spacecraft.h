@@ -30,7 +30,11 @@ public:
 	const uint8_t mCode;
 	const std::string mName;
 
-	void BeAttacked() {};
+	uint8_t GetDamaged(uint8_t deckNum) {
+		if (mDecks[deckNum].armor == 0) return 1;
+		--(mDecks[deckNum].armor);
+		return 2;
+	};
 
 private:
 	struct Deck {

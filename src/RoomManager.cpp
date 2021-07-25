@@ -81,7 +81,20 @@ bool RoomManager::CheckDeployCompletion(ClientCtxPtr pCc) {
 }
 
 
-bool RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	ClientCtxPtr opponentPCc = GetOpponent(pCc);
+
+	if (mRooms[roomNum].oceanGrid[opponentPCc].find(std::make_pair(x, y)) ==
+		mRooms[roomNum].oceanGrid[opponentPCc].end()) {
+		return 0;
+	}
+
+	uint8_t res = mRooms[roomNum].chs[pCc]->BeAttacked(
+		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].craftNum,
+		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].deckNum
+	);
+
 	return true;
 }
 

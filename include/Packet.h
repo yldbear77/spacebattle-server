@@ -24,6 +24,8 @@ constexpr int SC_RES_SKILL		= 10;
 constexpr int RES_SUCCESS		= 0;
 constexpr int RES_FAILED		= 1;
 
+constexpr int ALREADY_DESTROYED	= 2;
+
 typedef uint16_t	PACKET_SIZE;
 typedef uint8_t		PACKET_TYPE;
 
