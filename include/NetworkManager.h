@@ -11,8 +11,8 @@
 #include "ClientCtx.h"
 #include "GameManager.h"
 #include "RoomManager.h"
-
-#include "../include/Spacecraft.h"
+#include "Spacecraft.h"
+#include "Skill.h"
 
 #include "../net/SocketAddress.h"
 #include "../net/TCPSocket.h"

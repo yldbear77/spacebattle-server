@@ -95,7 +95,17 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].deckNum
 	);
 
-	return true;
+	return res;
+}
+
+
+void RoomManager::CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+
+}
+
+
+void RoomManager::CastPortal(ClientCtxPtr pCc) {
+
 }
 
 

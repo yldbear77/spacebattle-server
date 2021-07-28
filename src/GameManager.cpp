@@ -79,3 +79,35 @@ void GameManager::EnqueueWaitingQ(ClientCtxPtr pCc, std::string name, uint8_t ch
 		break;
 	}
 }
+
+void GameManager::CastSkill(ClientCtxPtr pCc, uint8_t skill, ...) {
+	va_list ap;
+	va_start(ap, skill);
+
+	switch (skill) {
+	case Skill::CANON: {
+		uint8_t x = va_arg(ap, uint8_t);
+		uint8_t y = va_arg(ap, uint8_t);
+		mRoomManager->CastCanon(pCc, x, y);
+		break;
+	}
+	case Skill::PORTAL: {
+		mRoomManager->CastPortal(pCc);
+		break;
+	}
+	case Skill::ENHANCEMENT: {
+		uint8_t x = va_arg(ap, uint8_t);
+		uint8_t y = va_arg(ap, uint8_t);
+		mRoomManager->CastEnhancement(pCc, x, y);
+		break;
+	}
+	case Skill::AMBUSH: {
+		uint8_t x1 = va_arg(ap, uint8_t);
+		uint8_t y1 = va_arg(ap, uint8_t);
+		uint8_t x2 = va_arg(ap, uint8_t);
+		uint8_t y2 = va_arg(ap, uint8_t);
+		mRoomManager->CastAmbush(pCc, x1, y1, x2, y2);
+		break;
+	}
+	}
+}

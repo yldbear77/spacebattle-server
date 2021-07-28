@@ -11,6 +11,7 @@
 #include "RoomManager.h"
 #include "NetworkManager.h"
 #include "Character.h"
+#include "Skill.h"
 
 class GameManager {
 public:
@@ -44,6 +45,7 @@ private:
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRoomManager->GetTurnOwner(pCc); }
 
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->Attack(pCc, x, y); }
+	void CastSkill(ClientCtxPtr pCc, uint8_t skill, ...);
 };
 
 #endif

@@ -349,6 +349,32 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 
 	InputBitStream ibs(payload, payloadSize);
 
-	// TODO: 스킬의 종류에 따라 패킷을 다르게 파싱
+	uint8_t skill;
+	ibs.ReadBytes(reinterpret_cast<void*>(&skill), 1);
+
+	switch (skill) {
+	case Skill::CANON: 
+	case Skill::ENHANCEMENT: {
+		uint8_t x, y;
+		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+		mGameManager->CastSkill(pCc, skill, x, y);
+		break;
+	}
+	case Skill::PORTAL: {
+		mGameManager->CastSkill(pCc, skill);
+		break;
+	}
+	case Skill::AMBUSH: {
+		uint8_t x1, y1, x2, y2;
+		ibs.ReadBytes(reinterpret_cast<void*>(&x1), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&y1), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&x2), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&y2), 1);
+		mGameManager->CastSkill(pCc, skill, x1, y1, x2, y2);
+		break;
+	}
+	}
+
 	// TODO: 턴 주인 변경 후, 턴 넘김 패킷 전송
 }

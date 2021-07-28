@@ -78,6 +78,11 @@ public:
 
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 
+	void CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y);
+	void CastPortal(ClientCtxPtr pCc);
+	void CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) {}
+	void CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {}
+
 	//void Redeploy(ClientCtxPtr pCc, uint8_t newKeyDeckX, uint8_t newKeyDeckY) {}
 
 private:
