@@ -100,7 +100,11 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 
 
 void RoomManager::CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
 
+	// TODO: canon cast 함수에 oceangrid를 참조형으로 같이 전달
+	// TODO: UseSkill 인자 겹치는건 오버로딩으로 해결
+	return GetCharacterInfo(roomNum, pCc)->UseSkill(Skill::CANON, x, y, mRooms[roomNum].targetGrid);
 }
 
 

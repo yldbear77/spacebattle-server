@@ -12,6 +12,7 @@
 #include "WaitQueue.h"
 #include "Character.h"
 #include "Spacecraft.h"
+#include "Skill.h"
 
 #include "../util/Logger.h"
 

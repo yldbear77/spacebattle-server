@@ -353,7 +353,7 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 	ibs.ReadBytes(reinterpret_cast<void*>(&skill), 1);
 
 	switch (skill) {
-	case Skill::CANON: 
+	case Skill::CANON:
 	case Skill::ENHANCEMENT: {
 		uint8_t x, y;
 		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);

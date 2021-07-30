@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <cstdarg>
 #include <unordered_map>
 
 #include "Spacecraft.h"
@@ -32,7 +33,7 @@ public:
 		return mSpacecrafts[craftNum].GetDamaged(deckNum);
 	}
 
-	virtual void UseSkill() = 0;
+	virtual void UseSkill(uint8_t skill, ...) = 0;
 
 protected:
 	uint8_t mCraftCount;
@@ -41,10 +42,13 @@ protected:
 
 class Jack : public Character {
 public:
-	void UseSkill() override {}
+	void UseSkill(uint8_t skill, ...) override;
 
 private:
 	friend class RoomManager;
+
+	Portal mPortal;
+	Ambush mAmbush;
 
 	Jack(uint8_t chCode = JACK, std::string name = "Jack") :
 		Character(chCode, name) {}
@@ -52,10 +56,13 @@ private:
 
 class Kaiser : public Character {
 public:
-	void UseSkill() override {}
+	void UseSkill(uint8_t skill, ...) override;
 
 private:
 	friend class RoomManager;
+
+	Canon mCanon;
+	Enhancement mEnhancement;
 
 	Kaiser(uint8_t chCode = KAISER, std::string name = "Kaiser") :
 		Character(chCode, name) {}

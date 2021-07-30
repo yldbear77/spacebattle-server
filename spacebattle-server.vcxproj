@@ -146,11 +146,13 @@
     <ClCompile Include="net\SocketAddress.cpp" />
     <ClCompile Include="net\SocketUtil.cpp" />
     <ClCompile Include="net\TCPSocket.cpp" />
+    <ClCompile Include="src\Character.cpp" />
     <ClCompile Include="src\ClientCtx.cpp" />
     <ClCompile Include="src\GameManager.cpp" />
     <ClCompile Include="src\NetworkManager.cpp" />
     <ClCompile Include="src\RoomManager.cpp" />
     <ClCompile Include="src\Server.cpp" />
+    <ClCompile Include="src\Skill.cpp" />
     <ClCompile Include="src\Spacecraft.cpp" />
     <ClCompile Include="src\WaitQueue.cpp" />
     <ClCompile Include="util\Logger.cpp" />
