@@ -45,7 +45,11 @@ private:
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRoomManager->GetTurnOwner(pCc); }
 
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->Attack(pCc, x, y); }
-	void CastSkill(ClientCtxPtr pCc, uint8_t skill, ...);
+
+	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->CastCanon(pCc, x, y); }
+	void CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) { mRoomManager->CastEnhancement(pCc, x, y); }
+	void CastPortal(ClientCtxPtr pCc) { mRoomManager->CastPortal(pCc); }
+	void CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) { mRoomManager->CastAmbush(pCc, x1, y1, x2, y2); }
 };
 
 #endif

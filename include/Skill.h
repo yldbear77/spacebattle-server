@@ -1,9 +1,13 @@
 #ifndef __SKILL_H__
 #define __SKILL_H__
 
+
 #include <cstdint>
 #include <utility>
 #include <vector>
+
+#include "ClientCtx.h"
+
 
 enum Skill {
 	CANON		= 0,
@@ -12,8 +16,14 @@ enum Skill {
 	AMBUSH		= 3,
 };
 
+
 class Canon {
 public:
+	struct Data {
+		uint8_t x;
+		uint8_t y;
+	};
+
 	struct Result {
 		bool isSuccess;
 		uint8_t x;
@@ -21,30 +31,29 @@ public:
 		std::vector<uint8_t> coords;
 	};
 
-	void cast(uint8_t x, uint8_t y) {
-		for (int i = 0; i < 4; ++i) {
-			uint8_t nx = x + castRange[i].first;
-			uint8_t ny = y + castRange[i].second;
-		}
-	}
+	Result cast(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 
 private:
 	static std::pair<int, int> castRange[4];
 };
+
 
 class Portal {
 public:
 	void cast() {}
 };
 
+
 class Enhancement {
 public:
 	void cast() {}
 };
 
+
 class Ambush {
 public:
 	void cast() {}
 };
+
 
 #endif

@@ -337,7 +337,12 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 	obs.WriteBytes(reinterpret_cast<void*>(&x), 1);
 	obs.WriteBytes(reinterpret_cast<void*>(&y), 1);
 
-	pCc->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+	std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
+	for (auto& c : clients) {
+		LOG_NOTIFY("공격 결과 송신: 소켓주소(%s), 결과(%d), X(%d), Y(%d)",
+			c->GetSocketAddr().ToString().c_str(), resCode, x, y);
+		c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+	}
 }
 
 
@@ -353,16 +358,22 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 	ibs.ReadBytes(reinterpret_cast<void*>(&skill), 1);
 
 	switch (skill) {
-	case Skill::CANON:
+	case Skill::CANON: {
+		uint8_t x, y;
+		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+		Canon::Result res = mGameManager->CastCanon(pCc, x, y);
+		break;
+	}
 	case Skill::ENHANCEMENT: {
 		uint8_t x, y;
 		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
-		mGameManager->CastSkill(pCc, skill, x, y);
+		mGameManager->CastEnhancement(pCc, x, y);
 		break;
 	}
 	case Skill::PORTAL: {
-		mGameManager->CastSkill(pCc, skill);
+		mGameManager->CastPortal(pCc);
 		break;
 	}
 	case Skill::AMBUSH: {
@@ -371,7 +382,7 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		ibs.ReadBytes(reinterpret_cast<void*>(&y1), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&x2), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&y2), 1);
-		mGameManager->CastSkill(pCc, skill, x1, y1, x2, y2);
+		mGameManager->CastAmbush(pCc, x1, y1, x2, y2);
 		break;
 	}
 	}

@@ -16,6 +16,7 @@
 
 #include "../util/Logger.h"
 
+
 class RoomManager {
 public:
 	struct DeployData {
@@ -30,9 +31,11 @@ private:
 		uint8_t deckNum;
 	};
 
-	struct Room {
-		typedef std::map<std::pair<uint8_t, uint8_t>, PosInfo> GridMap;
+public:
+	typedef std::map<std::pair<uint8_t, uint8_t>, PosInfo> GridMap;
 
+private:
+	struct Room {
 		// 방에 대한 기본 정보
 		uint16_t roomNumber;
 		uint8_t	mapCode;
@@ -52,6 +55,9 @@ private:
 		// 클라이언트 별 이름, 현재 턴 주인
 		std::map<ClientCtxPtr, std::string> clientName;
 		std::string turnOwner;
+
+		// 클라이언트 별 남아있는 갑판 수
+		std::map<ClientCtxPtr, uint8_t> remainingDecks;
 	};
 
 public:
@@ -79,16 +85,16 @@ public:
 
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 
-	void CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y);
+	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y);
+	void CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 	void CastPortal(ClientCtxPtr pCc);
-	void CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) {}
-	void CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {}
-
-	//void Redeploy(ClientCtxPtr pCc, uint8_t newKeyDeckX, uint8_t newKeyDeckY) {}
+	void CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 
 private:
 	typedef CharacterPtr (RoomManager::*CharacterCreatorPtr)();
 	typedef std::unordered_map<uint8_t, CharacterCreatorPtr> CharacterCreatorPtrMap;
+
+	friend class Canon;
 
 	static RoomManager* mInstance;
 	RoomManager() : mRoomCount(0) {}

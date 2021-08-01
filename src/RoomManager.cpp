@@ -39,6 +39,10 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 		CreateCharacter(pWaitQueue->mWaitingData[clientB].character);
 	mParticipatingRoom[clientA] = mParticipatingRoom[clientB] = mRoomCount;
 
+	// TODO: 남아있는 갑판 수 초기화 필요
+	//mRooms[mRoomCount].remainingDecks[clientA] = mRooms[mRoomCount].chs[clientA];
+	//mRooms[mRoomCount].remainingDecks[clientB] = 0;
+
 	const std::string clntAName = pWaitQueue->mWaitingData[clientA].name;
 	const std::string clntBName = pWaitQueue->mWaitingData[clientB].name;
 
@@ -90,7 +94,7 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 		return 0;
 	}
 
-	uint8_t res = mRooms[roomNum].chs[pCc]->BeAttacked(
+	uint8_t res = mRooms[roomNum].chs[opponentPCc]->BeAttacked(
 		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].craftNum,
 		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].deckNum
 	);
@@ -99,16 +103,23 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 }
 
 
-void RoomManager::CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+Canon::Result RoomManager::CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 	uint16_t roomNum = GetClientParticipatingRoom(pCc);
-
-	// TODO: canon cast 함수에 oceangrid를 참조형으로 같이 전달
-	// TODO: UseSkill 인자 겹치는건 오버로딩으로 해결
-	return GetCharacterInfo(roomNum, pCc)->UseSkill(Skill::CANON, x, y, mRooms[roomNum].targetGrid);
+	return dynamic_cast<Kaiser*>(GetCharacterInfo(roomNum, pCc).get())->CastCanon(pCc, x, y);
 }
 
 
 void RoomManager::CastPortal(ClientCtxPtr pCc) {
+
+}
+
+
+void RoomManager::CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+
+}
+
+
+void RoomManager::CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
 
 }
 

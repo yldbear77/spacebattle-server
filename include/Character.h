@@ -1,13 +1,16 @@
 #ifndef __CHARACTER_H__
 #define __CHARACTER_H__
 
+
 #include <vector>
 #include <memory>
 #include <cstdarg>
 #include <unordered_map>
 
 #include "Spacecraft.h"
+#include "ClientCtx.h"
 #include "Skill.h"
+
 
 class Character {
 public:
@@ -33,30 +36,21 @@ public:
 		return mSpacecrafts[craftNum].GetDamaged(deckNum);
 	}
 
-	virtual void UseSkill(uint8_t skill, ...) = 0;
+	virtual void dummy() = 0;
 
 protected:
 	uint8_t mCraftCount;
 	std::vector<Spacecraft> mSpacecrafts;
 };
 
-class Jack : public Character {
-public:
-	void UseSkill(uint8_t skill, ...) override;
 
-private:
-	friend class RoomManager;
-
-	Portal mPortal;
-	Ambush mAmbush;
-
-	Jack(uint8_t chCode = JACK, std::string name = "Jack") :
-		Character(chCode, name) {}
-};
-
+// Kaiser decks = 
 class Kaiser : public Character {
 public:
-	void UseSkill(uint8_t skill, ...) override;
+	void dummy() override {};
+
+	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mCanon.cast(pCc, x, y); }
+	void CastEnhancement(uint8_t x, uint8_t y) {}
 
 private:
 	friend class RoomManager;
@@ -68,6 +62,27 @@ private:
 		Character(chCode, name) {}
 };
 
+
+// Jack decks = 
+class Jack : public Character {
+public:
+	void dummy() override {};
+
+	void CastPortal() {}
+	void CastAmbush() {}
+
+private:
+	friend class RoomManager;
+
+	Portal mPortal;
+	Ambush mAmbush;
+
+	Jack(uint8_t chCode = JACK, std::string name = "Jack") :
+		Character(chCode, name) {}
+};
+
+
 typedef std::shared_ptr<Character> CharacterPtr;
+
 
 #endif
