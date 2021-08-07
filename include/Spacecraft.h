@@ -17,6 +17,11 @@ public:
 		SPACE_STATION
 	};
 
+	enum {
+		ALREADY_DESTROYED = 1,
+		SUCCESS_DESTROYED
+	};
+
 	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name)
 	{
 		for (int idx = 0; idx < craftInfo[code].second; ++idx) {
@@ -31,10 +36,13 @@ public:
 	const std::string mName;
 
 	uint8_t GetDamaged(uint8_t deckNum) {
-		if (mDecks[deckNum].armor == 0) return 1;
+		if (mDecks[deckNum].armor == 0) return ALREADY_DESTROYED;
 		--(mDecks[deckNum].armor);
-		return 2;
+		return SUCCESS_DESTROYED;
 	};
+
+	uint8_t GetArmor(uint8_t deckNum) { return mDecks[deckNum].armor; }
+	void EnhanceArmor(uint8_t deckNum) { ++(mDecks[deckNum].armor); }
 
 private:
 	struct Deck {

@@ -47,9 +47,11 @@ private:
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->Attack(pCc, x, y); }
 
 	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->CastCanon(pCc, x, y); }
-	void CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) { mRoomManager->CastEnhancement(pCc, x, y); }
+	Enhancement::Result CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->CastEnhancement(pCc, x, y); }
 	void CastPortal(ClientCtxPtr pCc) { mRoomManager->CastPortal(pCc); }
-	void CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) { mRoomManager->CastAmbush(pCc, x1, y1, x2, y2); }
+	Ambush::Result CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) { return mRoomManager->CastAmbush(pCc, x1, y1, x2, y2); }
+
+	ClientCtxPtr GetWinner(ClientCtxPtr pCc) { return mRoomManager->GetWinner(pCc); }
 };
 
 #endif

@@ -38,13 +38,22 @@ private:
 };
 
 
-class Portal {
+class Enhancement {
 public:
-	void cast() {}
+	struct Data {
+		uint8_t x;
+		uint8_t y;
+	};
+
+	struct Result {
+		bool isSuccess;
+	};
+
+	Result cast(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 };
 
 
-class Enhancement {
+class Portal {
 public:
 	void cast() {}
 };
@@ -52,7 +61,15 @@ public:
 
 class Ambush {
 public:
-	void cast() {}
+	struct Data {
+
+	};
+
+	struct Result {
+
+	};
+
+	Result cast(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 };
 
 

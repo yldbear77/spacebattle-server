@@ -319,10 +319,10 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 	case 0:		// 실패
 		resCode = RES_FAILED;
 		break;
-	case 1:		// 이미 침몰한 갑판 공격
+	case Spacecraft::ALREADY_DESTROYED:		// 이미 침몰한 갑판 공격
 		resCode = ALREADY_DESTROYED;
 		break;
-	case 2:		// 성공
+	case Spacecraft::SUCCESS_DESTROYED:		// 성공
 		resCode = RES_SUCCESS;
 		break;
 	}
@@ -343,6 +343,8 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 			c->GetSocketAddr().ToString().c_str(), resCode, x, y);
 		c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 	}
+
+	// TODO: 승자가 결정됐다면 게임 종료, 아니라면 턴 주인 변경 후 턴 넘김 패킷 전송
 }
 
 
@@ -357,19 +359,95 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 	uint8_t skill;
 	ibs.ReadBytes(reinterpret_cast<void*>(&skill), 1);
 
+	OutputBitStream obs;
+
 	switch (skill) {
 	case Skill::CANON: {
 		uint8_t x, y;
 		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+
 		Canon::Result res = mGameManager->CastCanon(pCc, x, y);
+
+		if (res.isSuccess) {
+			LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d), 개수(%d)",
+				pCc->GetSocketAddr().ToString().c_str(),
+				res.isSuccess,
+				x,
+				y,
+				res.coords.size()
+			);
+		}
+		else {
+			LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d)",
+				pCc->GetSocketAddr().ToString().c_str(),
+				res.isSuccess,
+				x,
+				y
+			);
+		}
+
+		if (res.isSuccess) {
+			PACKET_SIZE size = sizeof(PACKET_SIZE)
+				+ sizeof(PACKET_TYPE)
+				+ 1		// skill type
+				+ 1		// res
+				+ 1		// x
+				+ 1		// y
+				+ 1		// count
+				+ res.coords.size();
+			PACKET_TYPE type = SC_RES_SKILL;
+			uint8_t skillType = Skill::CANON;
+			uint8_t resCode = !(res.isSuccess);
+
+			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&x), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&y), 1);
+
+			uint8_t count = res.coords.size();
+			obs.WriteBytes(reinterpret_cast<void*>(&count), 1);
+			for (auto& c : res.coords) {
+				obs.WriteBytes(reinterpret_cast<void*>(&(c)), 1);
+			}
+		}
+		else {
+			PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+			PACKET_TYPE type = SC_RES_SKILL;
+			uint8_t skillType = Skill::CANON;
+
+			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&(res.isSuccess)), 1);
+		}
+
 		break;
 	}
 	case Skill::ENHANCEMENT: {
 		uint8_t x, y;
 		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
-		mGameManager->CastEnhancement(pCc, x, y);
+		
+		Enhancement::Result res = mGameManager->CastEnhancement(pCc, x, y);
+
+		LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), 성공(%d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			res.isSuccess
+		);
+
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+		PACKET_TYPE type = SC_RES_SKILL;
+		uint8_t skillType = Skill::ENHANCEMENT;
+		uint8_t resCode = !res.isSuccess;
+
+		obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+		obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+
 		break;
 	}
 	case Skill::PORTAL: {
@@ -382,10 +460,15 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		ibs.ReadBytes(reinterpret_cast<void*>(&y1), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&x2), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&y2), 1);
-		mGameManager->CastAmbush(pCc, x1, y1, x2, y2);
+		Ambush::Result res = mGameManager->CastAmbush(pCc, x1, y1, x2, y2);
 		break;
 	}
 	}
 
-	// TODO: 턴 주인 변경 후, 턴 넘김 패킷 전송
+	std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
+	for (auto& c : clients) {
+		c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
+	}
+
+	// TODO: 승자가 결정됐다면 게임 종료, 아니라면 턴 주인 변경 후 턴 넘김 패킷 전송
 }

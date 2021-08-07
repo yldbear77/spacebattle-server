@@ -58,6 +58,9 @@ private:
 
 		// 클라이언트 별 남아있는 갑판 수
 		std::map<ClientCtxPtr, uint8_t> remainingDecks;
+
+		// 승자
+		ClientCtxPtr winnerPCc;
 	};
 
 public:
@@ -79,22 +82,25 @@ public:
 	std::vector<DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].deloyStatus[pCc]; }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].turnOwner; }
 	ClientCtxPtr GetOpponent(ClientCtxPtr pCc) {
-		// TODO: 클라이언트가 게임에 참여 중인이 유효성 검증 필요
+		// TODO: 클라이언트가 게임에 참여 중인지 유효성 검증 필요
 		return mRooms[GetClientParticipatingRoom(pCc)].opponent[pCc];
 	}
+
+	ClientCtxPtr GetWinner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].winnerPCc; }
 
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 
 	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y);
-	void CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y);
+	Enhancement::Result CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 	void CastPortal(ClientCtxPtr pCc);
-	void CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+	Ambush::Result CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 
 private:
 	typedef CharacterPtr (RoomManager::*CharacterCreatorPtr)();
 	typedef std::unordered_map<uint8_t, CharacterCreatorPtr> CharacterCreatorPtrMap;
 
 	friend class Canon;
+	friend class Enhancement;
 
 	static RoomManager* mInstance;
 	RoomManager() : mRoomCount(0) {}
@@ -112,6 +118,8 @@ private:
 
 	CharacterPtr CreateJack() { return std::shared_ptr<Character>(new Jack()); }
 	CharacterPtr CreateKaiser() { return std::shared_ptr<Character>(new Kaiser()); }
+
+	void DecreaseRemainingDecks(ClientCtxPtr pCc, uint8_t count);
 };
 
 #endif

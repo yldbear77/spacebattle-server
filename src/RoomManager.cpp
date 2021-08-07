@@ -39,9 +39,8 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 		CreateCharacter(pWaitQueue->mWaitingData[clientB].character);
 	mParticipatingRoom[clientA] = mParticipatingRoom[clientB] = mRoomCount;
 
-	// TODO: 남아있는 갑판 수 초기화 필요
-	//mRooms[mRoomCount].remainingDecks[clientA] = mRooms[mRoomCount].chs[clientA];
-	//mRooms[mRoomCount].remainingDecks[clientB] = 0;
+	mRooms[mRoomCount].remainingDecks[clientA] = 20;
+	mRooms[mRoomCount].remainingDecks[clientB] = 20;
 
 	const std::string clntAName = pWaitQueue->mWaitingData[clientA].name;
 	const std::string clntBName = pWaitQueue->mWaitingData[clientB].name;
@@ -51,6 +50,8 @@ void RoomManager::CreateRoom(WaitQueue* pWaitQueue, ClientCtxPtr clientA, Client
 
 	std::uniform_int_distribution<int> dis(0, 1);
 	(dis(gen) == 0) ? mRooms[mRoomCount].turnOwner = clntAName : mRooms[mRoomCount].turnOwner = clntBName;
+
+	mRooms[mRoomCount].winnerPCc = nullptr;
 }
 
 
@@ -99,13 +100,27 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].deckNum
 	);
 
+	if (res == Spacecraft::SUCCESS_DESTROYED) DecreaseRemainingDecks(pCc, 1);
+
 	return res;
 }
 
 
 Canon::Result RoomManager::CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 	uint16_t roomNum = GetClientParticipatingRoom(pCc);
-	return dynamic_cast<Kaiser*>(GetCharacterInfo(roomNum, pCc).get())->CastCanon(pCc, x, y);
+
+	Canon::Result res = dynamic_cast<Kaiser*>(GetCharacterInfo(roomNum, pCc).get())
+		->CastCanon(pCc, x, y);
+
+	if (res.isSuccess) DecreaseRemainingDecks(pCc, res.coords.size());
+
+	return res;
+}
+
+
+Enhancement::Result RoomManager::CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	return dynamic_cast<Kaiser*>(GetCharacterInfo(roomNum, pCc).get())->CastEnhancement(pCc, x, y);
 }
 
 
@@ -114,13 +129,9 @@ void RoomManager::CastPortal(ClientCtxPtr pCc) {
 }
 
 
-void RoomManager::CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
-
-}
-
-
-void RoomManager::CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
-
+Ambush::Result RoomManager::CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	return dynamic_cast<Jack*>(GetCharacterInfo(roomNum, pCc).get())->CastAmbush(pCc, x1, y1, x2, y2);
 }
 
 
@@ -151,4 +162,16 @@ CharacterPtr RoomManager::CreateCharacter(uint8_t chCode) {
 
 	if (pCcp) return (this->*pCcp)();
 	else return nullptr;
+}
+
+
+void RoomManager::DecreaseRemainingDecks(ClientCtxPtr pCc, uint8_t count) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	ClientCtxPtr opponentPCc = GetOpponent(pCc);
+
+	mRooms[roomNum].remainingDecks[opponentPCc] -= count;
+
+	if (mRooms[roomNum].remainingDecks[opponentPCc] == 0) {
+		mRooms[roomNum].winnerPCc = pCc;
+	}
 }
