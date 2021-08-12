@@ -62,11 +62,19 @@ public:
 class Ambush {
 public:
 	struct Data {
-
+		uint8_t x1;
+		uint8_t y1;
+		uint8_t x2;
+		uint8_t y2;
 	};
 
 	struct Result {
-
+		bool isSuccess1;
+		uint8_t x1;
+		uint8_t y1;
+		bool isSuccess2;
+		uint8_t x2;
+		uint8_t y2;
 	};
 
 	Result cast(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);

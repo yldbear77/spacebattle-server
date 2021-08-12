@@ -460,7 +460,33 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		ibs.ReadBytes(reinterpret_cast<void*>(&y1), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&x2), 1);
 		ibs.ReadBytes(reinterpret_cast<void*>(&y2), 1);
+
 		Ambush::Result res = mGameManager->CastAmbush(pCc, x1, y1, x2, y2);
+
+		LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), 성공1(%d), 성공2(%d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			res.isSuccess1,
+			res.isSuccess2
+		);
+
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+		PACKET_TYPE type = SC_RES_SKILL;
+		uint8_t skillType = Skill::AMBUSH;
+
+		if (res.isSuccess1) {
+			uint8_t resCode = !(res.isSuccess1);
+			obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&x1), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&y1), 1);
+		}
+
+		if (res.isSuccess2) {
+			uint8_t resCode = !(res.isSuccess2);
+			obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&x2), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&y2), 1);
+		}
+
 		break;
 	}
 	}

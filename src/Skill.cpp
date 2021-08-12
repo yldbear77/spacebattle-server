@@ -66,7 +66,40 @@ Enhancement::Result Enhancement::cast(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 
 
 Ambush::Result Ambush::cast(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+	RoomManager* rm = RoomManager::GetInstance();
+
+	uint16_t roomNum = rm->GetClientParticipatingRoom(pCc);
+	ClientCtxPtr opponent = rm->GetOpponent(pCc);
+	auto& opntOg = rm->mRooms[roomNum].oceanGrid[opponent];
+
 	Result skillResult;
+	skillResult.isSuccess1 = skillResult.isSuccess2 = false;
+
+	if (opntOg.find(std::make_pair(x1, y1)) != opntOg.end()) {
+		uint8_t res = rm->GetCharacterInfo(roomNum, opponent)->BeAttacked(
+			opntOg[std::make_pair(x1, y1)].craftNum,
+			opntOg[std::make_pair(x1, y1)].deckNum
+		);
+
+		if (res == 2) {
+			skillResult.isSuccess1 = true;
+			skillResult.x1 = x1;
+			skillResult.y1 = y1;
+		}
+	}
+
+	if (opntOg.find(std::make_pair(x2, y2)) != opntOg.end()) {
+		uint8_t res = rm->GetCharacterInfo(roomNum, opponent)->BeAttacked(
+			opntOg[std::make_pair(x2, y2)].craftNum,
+			opntOg[std::make_pair(x2, y2)].deckNum
+		);
+
+		if (res == 2) {
+			skillResult.isSuccess2 = true;
+			skillResult.x2 = x2;
+			skillResult.y2 = y2;
+		}
+	}
 
 	return skillResult;
 }

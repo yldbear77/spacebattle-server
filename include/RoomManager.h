@@ -101,6 +101,7 @@ private:
 
 	friend class Canon;
 	friend class Enhancement;
+	friend class Ambush;
 
 	static RoomManager* mInstance;
 	RoomManager() : mRoomCount(0) {}

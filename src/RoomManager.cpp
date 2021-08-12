@@ -131,7 +131,14 @@ void RoomManager::CastPortal(ClientCtxPtr pCc) {
 
 Ambush::Result RoomManager::CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
 	uint16_t roomNum = GetClientParticipatingRoom(pCc);
-	return dynamic_cast<Jack*>(GetCharacterInfo(roomNum, pCc).get())->CastAmbush(pCc, x1, y1, x2, y2);
+
+	Ambush::Result res = dynamic_cast<Jack*>(GetCharacterInfo(roomNum, pCc).get())
+		->CastAmbush(pCc, x1, y1, x2, y2);
+
+	if (res.isSuccess1) DecreaseRemainingDecks(pCc, 1);
+	if (res.isSuccess2) DecreaseRemainingDecks(pCc, 1);
+
+	return res;
 }
 
 
