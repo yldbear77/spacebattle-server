@@ -30,10 +30,41 @@ Canon::Result Canon::cast(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 			opntOg[std::make_pair(nx, ny)].deckNum
 		);
 
-		if (res == 2) {
+		if (res == Spacecraft::MSG_SUCCESS || res == Spacecraft::MSG_ARMORED) {
 			skillResult.isSuccess = true;
 			skillResult.coords.push_back(i);
 		}
+	}
+
+	return skillResult;
+}
+
+
+std::pair<int, int> Scan::castRange[4] = {
+	{0, 0}, {1, 0}, {0, 1}, {1, 1}
+};
+
+
+Scan::Result Scan::cast(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+	RoomManager* rm = RoomManager::GetInstance();
+
+	uint16_t roomNum = rm->GetClientParticipatingRoom(pCc);
+	ClientCtxPtr opponent = rm->GetOpponent(pCc);
+	auto& opntOg = rm->mRooms[roomNum].oceanGrid[opponent];
+
+	Result skillResult;
+	skillResult.isSuccess = false;
+	skillResult.x = x;
+	skillResult.y = y;
+
+	for (int i = 0; i < 4; ++i) {
+		uint8_t nx = x + castRange[i].first;
+		uint8_t ny = y + castRange[i].second;
+
+		if (opntOg.find(std::make_pair(nx, ny)) == opntOg.end()) continue;
+
+		skillResult.isSuccess = true;
+		skillResult.coords.push_back(i);
 	}
 
 	return skillResult;
@@ -81,7 +112,7 @@ Ambush::Result Ambush::cast(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2
 			opntOg[std::make_pair(x1, y1)].deckNum
 		);
 
-		if (res == 2) {
+		if (res == Spacecraft::MSG_SUCCESS || res == Spacecraft::MSG_ARMORED) {
 			skillResult.isSuccess1 = true;
 			skillResult.x1 = x1;
 			skillResult.y1 = y1;
@@ -94,7 +125,7 @@ Ambush::Result Ambush::cast(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2
 			opntOg[std::make_pair(x2, y2)].deckNum
 		);
 
-		if (res == 2) {
+		if (res == Spacecraft::MSG_SUCCESS || res == Spacecraft::MSG_ARMORED) {
 			skillResult.isSuccess2 = true;
 			skillResult.x2 = x2;
 			skillResult.y2 = y2;

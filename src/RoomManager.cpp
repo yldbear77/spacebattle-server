@@ -86,6 +86,18 @@ bool RoomManager::CheckDeployCompletion(ClientCtxPtr pCc) {
 }
 
 
+void RoomManager::ToggleTurnOwner(ClientCtxPtr pCc) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	ClientCtxPtr opntPCc = GetOpponent(pCc);
+	if (mRooms[roomNum].clientName[pCc] == GetTurnOwner(pCc)) {
+		mRooms[roomNum].turnOwner = mRooms[roomNum].clientName[opntPCc];
+	}
+	else {
+		mRooms[roomNum].turnOwner = mRooms[roomNum].clientName[pCc];
+	}
+}
+
+
 uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 	uint16_t roomNum = GetClientParticipatingRoom(pCc);
 	ClientCtxPtr opponentPCc = GetOpponent(pCc);
@@ -100,7 +112,7 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 		mRooms[roomNum].oceanGrid[opponentPCc][std::make_pair(x, y)].deckNum
 	);
 
-	if (res == Spacecraft::SUCCESS_DESTROYED) DecreaseRemainingDecks(pCc, 1);
+	if (res == Spacecraft::MSG_SUCCESS || res == Spacecraft::MSG_ARMORED) DecreaseRemainingDecks(pCc, 1);
 
 	return res;
 }
@@ -124,8 +136,9 @@ Enhancement::Result RoomManager::CastEnhancement(ClientCtxPtr pCc, uint8_t x, ui
 }
 
 
-void RoomManager::CastPortal(ClientCtxPtr pCc) {
-
+Scan::Result RoomManager::CastScan(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
+	uint16_t roomNum = GetClientParticipatingRoom(pCc);
+	return dynamic_cast<Jack*>(GetCharacterInfo(roomNum, pCc).get())->CastScan(pCc, x, y);
 }
 
 

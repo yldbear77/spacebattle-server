@@ -11,7 +11,7 @@
 
 enum Skill {
 	CANON		= 0,
-	PORTAL		= 1,
+	SCAN		= 1,
 	ENHANCEMENT	= 2,
 	AMBUSH		= 3,
 };
@@ -53,9 +53,24 @@ public:
 };
 
 
-class Portal {
+class Scan {
 public:
-	void cast() {}
+	struct Data {
+		uint8_t x;
+		uint8_t y;
+	};
+
+	struct Result {
+		bool isSuccess;
+		uint8_t x;
+		uint8_t y;
+		std::vector<uint8_t> coords;
+	};
+
+	Result cast(ClientCtxPtr pCc, uint8_t x, uint8_t y);
+
+private:
+	static std::pair<int, int> castRange[4];
 };
 
 

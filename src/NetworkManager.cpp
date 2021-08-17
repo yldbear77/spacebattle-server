@@ -219,7 +219,7 @@ void NetworkManager::HandleRequestConnect(ClientCtxPtr pCc) {
 
 	uint16_t size = 4;
 	uint8_t type = SC_RES_CONNECT;
-	uint8_t resCode = 0;
+	uint8_t resCode = RES_SUCCESS;		// TODO: RES_FAILED가 될 수도 있는데, EnqueueWaiting과 연계된 문제
 
 	obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
 	obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
@@ -303,6 +303,8 @@ void NetworkManager::HandleResponseDeploy(ClientCtxPtr pCc) {
 
 
 void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
+	// TODO: 턴 주인이 맞는지 검증
+
 	LOG_NOTIFY("공격 요청 수신: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
 
 	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
@@ -314,18 +316,7 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 	ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
 	ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
 
-	uint8_t resCode;
-	switch (mGameManager->Attack(pCc, x, y)) {
-	case 0:		// 실패
-		resCode = RES_FAILED;
-		break;
-	case Spacecraft::ALREADY_DESTROYED:		// 이미 침몰한 갑판 공격
-		resCode = ALREADY_DESTROYED;
-		break;
-	case Spacecraft::SUCCESS_DESTROYED:		// 성공
-		resCode = RES_SUCCESS;
-		break;
-	}
+	uint8_t resCode = mGameManager->Attack(pCc, x, y);
 
 	OutputBitStream obs;
 	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1 + 1;
@@ -343,12 +334,12 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 			c->GetSocketAddr().ToString().c_str(), resCode, x, y);
 		c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 	}
-
-	// TODO: 승자가 결정됐다면 게임 종료, 아니라면 턴 주인 변경 후 턴 넘김 패킷 전송
 }
 
 
 void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
+	// TODO: 턴 주인이 맞는지 검증
+
 	LOG_NOTIFY("스킬 요청 수신: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
 
 	const uint8_t* payload = pCc->GetPayload<PACKET_SIZE, PACKET_TYPE>();
@@ -362,70 +353,9 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 	OutputBitStream obs;
 
 	switch (skill) {
-	case Skill::CANON: {
-		uint8_t x, y;
-		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
-		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
-
-		Canon::Result res = mGameManager->CastCanon(pCc, x, y);
-
-		if (res.isSuccess) {
-			LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d), 개수(%d)",
-				pCc->GetSocketAddr().ToString().c_str(),
-				res.isSuccess,
-				x,
-				y,
-				res.coords.size()
-			);
-		}
-		else {
-			LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d)",
-				pCc->GetSocketAddr().ToString().c_str(),
-				res.isSuccess,
-				x,
-				y
-			);
-		}
-
-		if (res.isSuccess) {
-			PACKET_SIZE size = sizeof(PACKET_SIZE)
-				+ sizeof(PACKET_TYPE)
-				+ 1		// skill type
-				+ 1		// res
-				+ 1		// x
-				+ 1		// y
-				+ 1		// count
-				+ res.coords.size();
-			PACKET_TYPE type = SC_RES_SKILL;
-			uint8_t skillType = Skill::CANON;
-			uint8_t resCode = !(res.isSuccess);
-
-			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
-			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&x), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&y), 1);
-
-			uint8_t count = res.coords.size();
-			obs.WriteBytes(reinterpret_cast<void*>(&count), 1);
-			for (auto& c : res.coords) {
-				obs.WriteBytes(reinterpret_cast<void*>(&(c)), 1);
-			}
-		}
-		else {
-			PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
-			PACKET_TYPE type = SC_RES_SKILL;
-			uint8_t skillType = Skill::CANON;
-
-			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
-			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
-			obs.WriteBytes(reinterpret_cast<void*>(&(res.isSuccess)), 1);
-		}
-
+	case Skill::CANON:
+		HandleCanonSkill(pCc, ibs);
 		break;
-	}
 	case Skill::ENHANCEMENT: {
 		uint8_t x, y;
 		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
@@ -439,7 +369,7 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		);
 
 		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
-		PACKET_TYPE type = SC_RES_SKILL;
+		PACKET_TYPE type = SC_RES_SKILL_CASTER;
 		uint8_t skillType = Skill::ENHANCEMENT;
 		uint8_t resCode = !res.isSuccess;
 
@@ -450,8 +380,41 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 
 		break;
 	}
-	case Skill::PORTAL: {
-		mGameManager->CastPortal(pCc);
+	case Skill::SCAN: {
+		uint8_t x, y;
+		ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
+		ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+
+		Scan::Result res = mGameManager->CastScan(pCc, x, y);
+		
+		LOG_NOTIFY("스캔 스킬 결과 송신: 소켓주소(%s), 성공(%d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			res.isSuccess
+		);
+
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+		PACKET_TYPE type = SC_RES_SKILL_CASTER;
+		uint8_t skillType = Skill::SCAN;
+		uint8_t resCode = !(res.isSuccess);
+
+		if (res.isSuccess) {
+			size += (1 + 1 + 1 + res.coords.size());
+			obs.WriteBytes(reinterpret_cast<void*>(&x), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&y), 1);
+
+			uint8_t count = res.coords.size();
+			obs.WriteBytes(reinterpret_cast<void*>(&count), 1);
+			for (auto& c : res.coords) {
+				obs.WriteBytes(reinterpret_cast<void*>(&(c)), 1);
+			}
+		}
+		else {
+			obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+			obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+			obs.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
+		}
+
 		break;
 	}
 	case Skill::AMBUSH: {
@@ -463,26 +426,36 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 
 		Ambush::Result res = mGameManager->CastAmbush(pCc, x1, y1, x2, y2);
 
-		LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), 성공1(%d), 성공2(%d)",
+		LOG_NOTIFY("기습 스킬 결과 송신: 소켓주소(%s), 성공1(%d), 성공2(%d)",
 			pCc->GetSocketAddr().ToString().c_str(),
 			res.isSuccess1,
 			res.isSuccess2
 		);
 
-		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
-		PACKET_TYPE type = SC_RES_SKILL;
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1;
+		PACKET_TYPE type = SC_RES_SKILL_CASTER;
 		uint8_t skillType = Skill::AMBUSH;
 
+		size += 2;
+		if (res.isSuccess1) size += 2;
+		if (res.isSuccess2) size += 2;
+
+		obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+		obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+
+		uint8_t resCode = !(res.isSuccess1);
+		obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+
 		if (res.isSuccess1) {
-			uint8_t resCode = !(res.isSuccess1);
-			obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 			obs.WriteBytes(reinterpret_cast<void*>(&x1), 1);
 			obs.WriteBytes(reinterpret_cast<void*>(&y1), 1);
 		}
 
+		resCode = !(res.isSuccess2);
+		obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+
 		if (res.isSuccess2) {
-			uint8_t resCode = !(res.isSuccess2);
-			obs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 			obs.WriteBytes(reinterpret_cast<void*>(&x2), 1);
 			obs.WriteBytes(reinterpret_cast<void*>(&y2), 1);
 		}
@@ -496,5 +469,118 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 	}
 
-	// TODO: 승자가 결정됐다면 게임 종료, 아니라면 턴 주인 변경 후 턴 넘김 패킷 전송
+	ClientCtxPtr winner = mGameManager->GetWinner(pCc);
+	if (winner != nullptr) {
+		for (auto& c : clients) {
+			if (c == winner) {
+				OutputBitStream winnerObs;
+				uint8_t resCode = WINNER;
+				winnerObs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+				c->SendPacket(winnerObs.GetBufferPtr(), winnerObs.GetByteLength());
+			}
+			else {
+				OutputBitStream loserObs;
+				uint8_t resCode = LOSER;
+				loserObs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+				c->SendPacket(loserObs.GetBufferPtr(), loserObs.GetByteLength());
+			}
+		}
+	}
+	else {
+		LOG_NOTIFY("턴 넘어감: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+
+		mGameManager->ToggleTurnOwner(pCc);
+		std::string turnOwner = mGameManager->GetTurnOwner(pCc);
+
+		OutputBitStream toggleTurnObs;
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + turnOwner.size();
+		PACKET_TYPE type = SC_START_BP;
+		uint8_t len = turnOwner.size();
+
+		toggleTurnObs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+		toggleTurnObs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+		toggleTurnObs.WriteBytes(reinterpret_cast<void*>(&len), 1);
+		toggleTurnObs.WriteBytes(reinterpret_cast<void*>(const_cast<char*>(turnOwner.c_str())), len);
+
+		for (auto& c : clients) c->SendPacket(toggleTurnObs.GetBufferPtr(), toggleTurnObs.GetByteLength());
+	}
+}
+
+
+void NetworkManager::HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs) {
+	uint8_t x, y;
+	ibs.ReadBytes(reinterpret_cast<void*>(&x), 1);
+	ibs.ReadBytes(reinterpret_cast<void*>(&y), 1);
+
+	Canon::Result res = mGameManager->CastCanon(pCc, x, y);
+
+	if (res.isSuccess) {
+		LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d), 개수(%d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			res.isSuccess,
+			x,
+			y,
+			res.coords.size()
+		);
+	}
+	else {
+		LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			res.isSuccess,
+			x,
+			y
+		);
+	}
+
+	if (res.isSuccess) {
+		PACKET_SIZE size = sizeof(PACKET_SIZE)
+			+ sizeof(PACKET_TYPE)
+			+ 1		// skill type
+			+ 1		// res
+			+ 1		// x
+			+ 1		// y
+			+ 1		// count
+			+ res.coords.size();
+		PACKET_TYPE type = SC_RES_SKILL_CASTER;
+		uint8_t skillType = Skill::CANON;
+		uint8_t resCode = !(res.isSuccess);
+
+		obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+		obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&x), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&y), 1);
+
+		uint8_t count = res.coords.size();
+		obs.WriteBytes(reinterpret_cast<void*>(&count), 1);
+		for (auto& c : res.coords) {
+			obs.WriteBytes(reinterpret_cast<void*>(&(c)), 1);
+		}
+	}
+	else {
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+		PACKET_TYPE type = SC_RES_SKILL_CASTER;
+		uint8_t skillType = Skill::CANON;
+
+		obs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+		obs.WriteBytes(reinterpret_cast<void*>(&type), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
+		obs.WriteBytes(reinterpret_cast<void*>(&(res.isSuccess)), 1);
+	}
+}
+
+
+void NetworkManager::HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs) {
+
+}
+
+
+void NetworkManager::HandleEnhancementSkill(ClientCtxPtr pCc, InputBitStream& ibs) {
+
+}
+
+
+void NetworkManager::HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs) {
+
 }

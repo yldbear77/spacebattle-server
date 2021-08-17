@@ -18,14 +18,16 @@ public:
 	};
 
 	enum {
-		ALREADY_DESTROYED = 1,
-		SUCCESS_DESTROYED
+		MSG_SUCCESS,		// 성공
+		MSG_FAILED,			// 실패
+		MSG_ARMORED,		// 강화된 곳
+		MSG_DESTROYED		// 이미 침몰됨 (아머가 0인 상황)
 	};
 
 	Spacecraft(uint8_t code, std::string name) : mCode(code), mName(name)
 	{
 		for (int idx = 0; idx < craftInfo[code].second; ++idx) {
-			mDecks.push_back(Deck{ 1 });
+			mDecks.push_back(Deck{ 1, false });
 		}
 	}
 
@@ -36,17 +38,25 @@ public:
 	const std::string mName;
 
 	uint8_t GetDamaged(uint8_t deckNum) {
-		if (mDecks[deckNum].armor == 0) return ALREADY_DESTROYED;
-		--(mDecks[deckNum].armor);
-		return SUCCESS_DESTROYED;
+		switch (GetArmor(deckNum)) {
+		case 0:
+			return MSG_FAILED;
+		default:
+			DecreaseArmor(deckNum);
+			if (GetEnhancedState(deckNum)) return MSG_ARMORED;
+			else return MSG_SUCCESS;
+		}
 	};
 
 	uint8_t GetArmor(uint8_t deckNum) { return mDecks[deckNum].armor; }
-	void EnhanceArmor(uint8_t deckNum) { ++(mDecks[deckNum].armor); }
+	bool GetEnhancedState(uint8_t deckNum) { return mDecks[deckNum].isEnhanced; }
+	void IncreaseArmor(uint8_t deckNum) { mDecks[deckNum].isEnhanced = true; ++(mDecks[deckNum].armor); }
+	void DecreaseArmor(uint8_t deckNum) { --(mDecks[deckNum].armor); }
 
 private:
 	struct Deck {
 		uint8_t armor;
+		bool isEnhanced;
 	};
 
 	std::vector<Deck> mDecks;

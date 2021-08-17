@@ -40,6 +40,8 @@ private:
 	}
 	bool CheckDeployCompletion(ClientCtxPtr pCc) { return mRoomManager->CheckDeployCompletion(pCc); }
 
+	void ToggleTurnOwner(ClientCtxPtr pCc) { mRoomManager->ToggleTurnOwner(pCc); }
+
 	std::vector<RoomManager::DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRoomManager->GetDeployStatus(pCc); }
 	std::set<ClientCtxPtr> GetParticipatingClients(ClientCtxPtr pCc) { return mRoomManager->GetParticipatingClients(pCc); }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRoomManager->GetTurnOwner(pCc); }
@@ -48,7 +50,7 @@ private:
 
 	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->CastCanon(pCc, x, y); }
 	Enhancement::Result CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->CastEnhancement(pCc, x, y); }
-	void CastPortal(ClientCtxPtr pCc) { mRoomManager->CastPortal(pCc); }
+	Scan::Result CastScan(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->CastScan(pCc, x, y); }
 	Ambush::Result CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) { return mRoomManager->CastAmbush(pCc, x1, y1, x2, y2); }
 
 	ClientCtxPtr GetWinner(ClientCtxPtr pCc) { return mRoomManager->GetWinner(pCc); }

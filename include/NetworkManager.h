@@ -72,6 +72,11 @@ private:
 	void HandleResponseDeploy(ClientCtxPtr pCc);
 	void HandleRequestAttack(ClientCtxPtr pCc);
 	void HandleRequestSkill(ClientCtxPtr pCc);
+
+	void HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs);
+	void HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs);
+	void HandleEnhancementSkill(ClientCtxPtr pCc, InputBitStream& ibs);
+	void HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs);
 };
 
 #endif

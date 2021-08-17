@@ -41,7 +41,7 @@ public:
 	}
 
 	void EnhanceDeckArmor(uint8_t craftNum, uint8_t deckNum) {
-		mSpacecrafts[craftNum].EnhanceArmor(deckNum);
+		mSpacecrafts[craftNum].IncreaseArmor(deckNum);
 	}
 
 	virtual void dummy() = 0;
@@ -74,13 +74,13 @@ class Jack : public Character {
 public:
 	void dummy() override {};
 
-	void CastPortal() {}
+	Scan::Result CastScan(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mScan.cast(pCc, x, y); }
 	Ambush::Result CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) { return mAmbush.cast(pCc, x1, y1, x2, y2); }
 
 private:
 	friend class RoomManager;
 
-	Portal mPortal;
+	Scan mScan;
 	Ambush mAmbush;
 
 	Jack(uint8_t chCode = JACK, std::string name = "Jack") :

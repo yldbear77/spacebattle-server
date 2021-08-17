@@ -79,6 +79,8 @@ public:
 	void InitializeDeploy(ClientCtxPtr pCc, std::vector<DeployData>& data);
 	bool CheckDeployCompletion(ClientCtxPtr pCc);
 
+	void ToggleTurnOwner(ClientCtxPtr pCc);
+
 	std::vector<DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].deloyStatus[pCc]; }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].turnOwner; }
 	ClientCtxPtr GetOpponent(ClientCtxPtr pCc) {
@@ -92,7 +94,7 @@ public:
 
 	Canon::Result CastCanon(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 	Enhancement::Result CastEnhancement(ClientCtxPtr pCc, uint8_t x, uint8_t y);
-	void CastPortal(ClientCtxPtr pCc);
+	Scan::Result CastScan(ClientCtxPtr pCc, uint8_t x, uint8_t y);
 	Ambush::Result CastAmbush(ClientCtxPtr pCc, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 
 private:
@@ -100,6 +102,7 @@ private:
 	typedef std::unordered_map<uint8_t, CharacterCreatorPtr> CharacterCreatorPtrMap;
 
 	friend class Canon;
+	friend class Scan;
 	friend class Enhancement;
 	friend class Ambush;
 
