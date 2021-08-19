@@ -73,10 +73,10 @@ private:
 	void HandleRequestAttack(ClientCtxPtr pCc);
 	void HandleRequestSkill(ClientCtxPtr pCc);
 
-	void HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs);
-	void HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs);
-	void HandleEnhancementSkill(ClientCtxPtr pCc, InputBitStream& ibs);
-	void HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs);
+	void HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs, OutputBitStream& obsToCaster, OutputBitStream& obsToCastee);
+	void HandleEnhancementSkill(ClientCtxPtr pCc, InputBitStream& ibs, OutputBitStream& obsToCaster, OutputBitStream& obsToCastee);
+	void HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs, OutputBitStream& obsToCaster, OutputBitStream& obsToCastee);
+	void HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs, OutputBitStream& obsToCaster, OutputBitStream& obsToCastee);
 };
 
 #endif
