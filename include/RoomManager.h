@@ -75,6 +75,7 @@ public:
 	CharacterPtr GetCharacterInfo(uint16_t roomNum, ClientCtxPtr pCc) { return mRooms[roomNum].chs[pCc]; }
 	uint16_t GetClientParticipatingRoom(ClientCtxPtr pCc) { return mParticipatingRoom[pCc]; }
 	std::set<ClientCtxPtr> GetParticipatingClients(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].clients; }
+	std::string GetClientName(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].clientName[pCc]; }
 
 	void InitializeDeploy(ClientCtxPtr pCc, std::vector<DeployData>& data);
 	bool CheckDeployCompletion(ClientCtxPtr pCc);
@@ -87,6 +88,7 @@ public:
 		// TODO: 클라이언트가 게임에 참여 중인지 유효성 검증 필요
 		return mRooms[GetClientParticipatingRoom(pCc)].opponent[pCc];
 	}
+	uint8_t GetRemainingDecks(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].remainingDecks[pCc]; }
 
 	ClientCtxPtr GetWinner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].winnerPCc; }
 

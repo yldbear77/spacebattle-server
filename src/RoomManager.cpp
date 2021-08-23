@@ -104,7 +104,7 @@ uint8_t RoomManager::Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 
 	if (mRooms[roomNum].oceanGrid[opponentPCc].find(std::make_pair(x, y)) ==
 		mRooms[roomNum].oceanGrid[opponentPCc].end()) {
-		return 0;
+		return Spacecraft::MSG_FAILED;
 	}
 
 	uint8_t res = mRooms[roomNum].chs[opponentPCc]->BeAttacked(

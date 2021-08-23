@@ -330,8 +330,11 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 
 	std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
 	for (auto& c : clients) {
-		LOG_NOTIFY("공격 결과 송신: 소켓주소(%s), 결과(%d), X(%d), Y(%d)",
-			c->GetSocketAddr().ToString().c_str(), resCode, x, y);
+		LOG_NOTIFY("공격 결과 송신: 소켓주소(%s), 결과(%s), X(%d), Y(%d)",
+			c->GetSocketAddr().ToString().c_str(),
+			resCode == Spacecraft::MSG_FAILED ? "실패" : "성공",
+			x,
+			y);
 		c->SendPacket(obs.GetBufferPtr(), obs.GetByteLength());
 	}
 }
@@ -362,10 +365,11 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 	case Skill::SCAN:
 		HandleScanSkill(pCc, ibs, obsToCaster, obsToCastee);
 		break;
-	case Skill::AMBUSH: {
+	case Skill::AMBUSH:
 		HandleAmbushSkill(pCc, ibs, obsToCaster, obsToCastee);
 		break;
-	}
+	case Skill::NONE:
+		break;
 	}
 
 	std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
@@ -373,6 +377,11 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		if(c == pCc) c->SendPacket(obsToCaster.GetBufferPtr(), obsToCaster.GetByteLength());
 		else c->SendPacket(obsToCastee.GetBufferPtr(), obsToCastee.GetByteLength());
 	}
+
+	ClientCtxPtr opntPCc = mGameManager->GetOpponent(pCc);
+
+	LOG_NOTIFY("%s의 남아있는 갑판 수: %d", mGameManager->GetClientName(pCc).c_str(), mGameManager->GetRemainingDecks(pCc));
+	LOG_NOTIFY("%s의 남아있는 갑판 수: %d", mGameManager->GetClientName(opntPCc).c_str(), mGameManager->GetRemainingDecks(opntPCc));
 
 	ClientCtxPtr winner = mGameManager->GetWinner(pCc);
 	if (winner != nullptr) {
@@ -392,7 +401,11 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 		}
 	}
 	else {
-		LOG_NOTIFY("턴 넘어감: 소켓주소(%s)", pCc->GetSocketAddr().ToString().c_str());
+		LOG_NOTIFY("%d번 방 턴 넘어감: 이름(%s -> %s)",
+			mGameManager->GetClientParticipatingRoom(pCc),
+			mGameManager->GetClientName(pCc).c_str(),
+			mGameManager->GetClientName(opntPCc).c_str()
+		);
 
 		mGameManager->ToggleTurnOwner(pCc);
 		std::string turnOwner = mGameManager->GetTurnOwner(pCc);
@@ -420,16 +433,15 @@ void NetworkManager::HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs, Out
 	Canon::Result res = mGameManager->CastCanon(pCc, x, y);
 
 	if (res.isSuccess) {
-		LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d), 개수(%d)",
+		LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공, X(%d), Y(%d), 개수(%d)",
 			pCc->GetSocketAddr().ToString().c_str(),
-			res.isSuccess,
 			x,
 			y,
 			res.coords.size()
 		);
 	}
 	else {
-		LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 성공여부(%d), X(%d), Y(%d)",
+		LOG_NOTIFY("캐논 스킬 결과 송신: 소켓주소(%s), 실패, X(%d), Y(%d)",
 			pCc->GetSocketAddr().ToString().c_str(),
 			res.isSuccess,
 			x,
@@ -502,9 +514,9 @@ void NetworkManager::HandleEnhancementSkill(ClientCtxPtr pCc, InputBitStream& ib
 
 	Enhancement::Result res = mGameManager->CastEnhancement(pCc, x, y);
 
-	LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), 성공(%d)",
+	LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), 성공여부(%s)",
 		pCc->GetSocketAddr().ToString().c_str(),
-		res.isSuccess
+		res.isSuccess ? "성공" : "실패"
 	);
 
 	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
@@ -533,9 +545,9 @@ void NetworkManager::HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs, Outp
 
 	Scan::Result res = mGameManager->CastScan(pCc, x, y);
 
-	LOG_NOTIFY("스캔 스킬 결과 송신: 소켓주소(%s), 성공(%d)",
+	LOG_NOTIFY("스캔 스킬 결과 송신: 소켓주소(%s), 성공여부(%s)",
 		pCc->GetSocketAddr().ToString().c_str(),
-		res.isSuccess
+		res.isSuccess ? "성공" : "실패"
 	);
 
 	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
@@ -578,10 +590,10 @@ void NetworkManager::HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs, Ou
 
 	Ambush::Result res = mGameManager->CastAmbush(pCc, x1, y1, x2, y2);
 
-	LOG_NOTIFY("기습 스킬 결과 송신: 소켓주소(%s), 성공1(%d), 성공2(%d)",
+	LOG_NOTIFY("기습 스킬 결과 송신: 소켓주소(%s), 성공여부1(%s), 성공여부2(%s)",
 		pCc->GetSocketAddr().ToString().c_str(),
-		res.isSuccess1,
-		res.isSuccess2
+		res.isSuccess1 ? "성공" : "실패",
+		res.isSuccess2 ? "성공" : "실패"
 	);
 
 	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1;

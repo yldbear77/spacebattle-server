@@ -44,7 +44,11 @@ private:
 
 	std::vector<RoomManager::DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRoomManager->GetDeployStatus(pCc); }
 	std::set<ClientCtxPtr> GetParticipatingClients(ClientCtxPtr pCc) { return mRoomManager->GetParticipatingClients(pCc); }
+	uint16_t GetClientParticipatingRoom(ClientCtxPtr pCc) { return mRoomManager->GetClientParticipatingRoom(pCc); }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRoomManager->GetTurnOwner(pCc); }
+	std::string GetClientName(ClientCtxPtr pCc) { return mRoomManager->GetClientName(pCc); }
+	ClientCtxPtr GetOpponent(ClientCtxPtr pCc) { return mRoomManager->GetOpponent(pCc); }
+	uint8_t GetRemainingDecks(ClientCtxPtr pCc) { return mRoomManager->GetRemainingDecks(pCc); }
 
 	uint8_t Attack(ClientCtxPtr pCc, uint8_t x, uint8_t y) { return mRoomManager->Attack(pCc, x, y); }
 

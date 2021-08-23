@@ -14,6 +14,7 @@ enum Skill {
 	SCAN		= 1,
 	ENHANCEMENT	= 2,
 	AMBUSH		= 3,
+	NONE		= 100
 };
 
 
