@@ -330,7 +330,7 @@ void NetworkManager::HandleRequestAttack(ClientCtxPtr pCc) {
 
 	std::set<ClientCtxPtr> clients = mGameManager->GetParticipatingClients(pCc);
 	for (auto& c : clients) {
-		LOG_NOTIFY("공격 결과 송신: 소켓주소(%s), 결과(%s), X(%d), Y(%d)",
+		LOG_NOTIFY("공격 결과 송신: 소켓주소(%s), %s, X(%d), Y(%d)",
 			c->GetSocketAddr().ToString().c_str(),
 			resCode == Spacecraft::MSG_FAILED ? "실패" : "성공",
 			x,
@@ -385,17 +385,35 @@ void NetworkManager::HandleRequestSkill(ClientCtxPtr pCc) {
 
 	ClientCtxPtr winner = mGameManager->GetWinner(pCc);
 	if (winner != nullptr) {
+		LOG_NOTIFY("%d번 방 게임 종료: 승자(%s)",
+			mGameManager->GetClientParticipatingRoom(winner),
+			mGameManager->GetClientName(winner).c_str());
+
 		for (auto& c : clients) {
 			if (c == winner) {
 				OutputBitStream winnerObs;
+
+				PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1;
+				PACKET_TYPE type = SC_GAME_RESULT;
 				uint8_t resCode = WINNER;
+
+				winnerObs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+				winnerObs.WriteBytes(reinterpret_cast<void*>(&type), 1);
 				winnerObs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+
 				c->SendPacket(winnerObs.GetBufferPtr(), winnerObs.GetByteLength());
 			}
 			else {
 				OutputBitStream loserObs;
+
+				PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1;
+				PACKET_TYPE type = SC_GAME_RESULT;
 				uint8_t resCode = LOSER;
+
+				loserObs.WriteBytes(reinterpret_cast<void*>(&size), 2);
+				loserObs.WriteBytes(reinterpret_cast<void*>(&type), 1);
 				loserObs.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
+
 				c->SendPacket(loserObs.GetBufferPtr(), loserObs.GetByteLength());
 			}
 		}
@@ -514,9 +532,10 @@ void NetworkManager::HandleEnhancementSkill(ClientCtxPtr pCc, InputBitStream& ib
 
 	Enhancement::Result res = mGameManager->CastEnhancement(pCc, x, y);
 
-	LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), 성공여부(%s)",
+	LOG_NOTIFY("강화 스킬 결과 송신: 소켓주소(%s), %s, X(%d), Y(%d)",
 		pCc->GetSocketAddr().ToString().c_str(),
-		res.isSuccess ? "성공" : "실패"
+		res.isSuccess ? "성공" : "실패",
+		x, y
 	);
 
 	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
@@ -545,10 +564,17 @@ void NetworkManager::HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs, Outp
 
 	Scan::Result res = mGameManager->CastScan(pCc, x, y);
 
-	LOG_NOTIFY("스캔 스킬 결과 송신: 소켓주소(%s), 성공여부(%s)",
-		pCc->GetSocketAddr().ToString().c_str(),
-		res.isSuccess ? "성공" : "실패"
-	);
+	if (res.isSuccess) {
+		LOG_NOTIFY("스캔 스킬 결과 송신: 소켓주소(%s), 성공, 개수(%d)",
+			pCc->GetSocketAddr().ToString().c_str(),
+			res.coords.size()
+		);
+	}
+	else {
+		LOG_NOTIFY("스캔 스킬 결과 송신: 소켓주소(%s), 실패",
+			pCc->GetSocketAddr().ToString().c_str()
+		);
+	}
 
 	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
 	PACKET_TYPE type = SC_RES_SKILL_CASTER;
