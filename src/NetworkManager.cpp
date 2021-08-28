@@ -505,7 +505,7 @@ void NetworkManager::HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs, Out
 		}
 	}
 	else {
-		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+		PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1 + 2;
 		PACKET_TYPE type = SC_RES_SKILL_CASTER;
 		uint8_t skillType = Skill::CANON;
 		uint8_t resCode = !(res.isSuccess);
@@ -514,6 +514,8 @@ void NetworkManager::HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs, Out
 		obsToCaster.WriteBytes(reinterpret_cast<void*>(&type), 1);
 		obsToCaster.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
 		obsToCaster.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
+		obsToCaster.WriteBytes(reinterpret_cast<void*>(&x), 1);
+		obsToCaster.WriteBytes(reinterpret_cast<void*>(&y), 1);
 
 		type = SC_RES_SKILL_CASTEE;
 
@@ -521,6 +523,8 @@ void NetworkManager::HandleCanonSkill(ClientCtxPtr pCc, InputBitStream& ibs, Out
 		obsToCastee.WriteBytes(reinterpret_cast<void*>(&type), 1);
 		obsToCastee.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
 		obsToCastee.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
+		obsToCastee.WriteBytes(reinterpret_cast<void*>(&x), 1);
+		obsToCastee.WriteBytes(reinterpret_cast<void*>(&y), 1);
 	}
 }
 
@@ -576,34 +580,30 @@ void NetworkManager::HandleScanSkill(ClientCtxPtr pCc, InputBitStream& ibs, Outp
 		);
 	}
 
-	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1 + 1;
+	PACKET_SIZE size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1;
 	PACKET_TYPE type = SC_RES_SKILL_CASTER;
 	uint8_t skillType = Skill::SCAN;
-	uint8_t resCode = !(res.isSuccess);
 
-	if (res.isSuccess) {
-		size += (1 + 1 + 1 + res.coords.size());
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&x), 1);
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&y), 1);
+	size += 1 + 1 + 1 + res.coords.size();
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&size), 2);
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&type), 1);
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
 
-		uint8_t count = res.coords.size();
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&count), 1);
-		for (auto& c : res.coords) {
-			obsToCaster.WriteBytes(reinterpret_cast<void*>(&(c)), 1);
-		}
-	}
-	else {
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&size), 2);
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&type), 1);
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&(resCode)), 1);
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&x), 1);
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&y), 1);
+
+	uint8_t count = res.coords.size();
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&count), 1);
+	for (auto& c : res.coords) {
+		obsToCaster.WriteBytes(reinterpret_cast<void*>(&(c)), 1);
 	}
 
-	size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE);
+	size = sizeof(PACKET_SIZE) + sizeof(PACKET_TYPE) + 1;
 	type = SC_RES_SKILL_CASTEE;
 
 	obsToCastee.WriteBytes(reinterpret_cast<void*>(&size), 2);
 	obsToCastee.WriteBytes(reinterpret_cast<void*>(&type), 1);
+	obsToCastee.WriteBytes(reinterpret_cast<void*>(&skillType), 1);
 }
 
 
@@ -626,9 +626,7 @@ void NetworkManager::HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs, Ou
 	PACKET_TYPE type = SC_RES_SKILL_CASTER;
 	uint8_t skillType = Skill::AMBUSH;
 
-	size += 2;
-	if (res.isSuccess1) size += 2;
-	if (res.isSuccess2) size += 2;
+	size += 2 + 2 + 2;
 
 	obsToCaster.WriteBytes(reinterpret_cast<void*>(&size), 2);
 	obsToCaster.WriteBytes(reinterpret_cast<void*>(&type), 1);
@@ -644,21 +642,17 @@ void NetworkManager::HandleAmbushSkill(ClientCtxPtr pCc, InputBitStream& ibs, Ou
 	obsToCaster.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 	obsToCastee.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 
-	if (res.isSuccess1) {
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&x1), 1);
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&y1), 1);
-		obsToCastee.WriteBytes(reinterpret_cast<void*>(&x1), 1);
-		obsToCastee.WriteBytes(reinterpret_cast<void*>(&y1), 1);
-	}
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&x1), 1);
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&y1), 1);
+	obsToCastee.WriteBytes(reinterpret_cast<void*>(&x1), 1);
+	obsToCastee.WriteBytes(reinterpret_cast<void*>(&y1), 1);
 
 	resCode = !(res.isSuccess2);
 	obsToCaster.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 	obsToCastee.WriteBytes(reinterpret_cast<void*>(&resCode), 1);
 
-	if (res.isSuccess2) {
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&x2), 1);
-		obsToCaster.WriteBytes(reinterpret_cast<void*>(&y2), 1);
-		obsToCastee.WriteBytes(reinterpret_cast<void*>(&x2), 1);
-		obsToCastee.WriteBytes(reinterpret_cast<void*>(&y2), 1);
-	}
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&x2), 1);
+	obsToCaster.WriteBytes(reinterpret_cast<void*>(&y2), 1);
+	obsToCastee.WriteBytes(reinterpret_cast<void*>(&x2), 1);
+	obsToCastee.WriteBytes(reinterpret_cast<void*>(&y2), 1);
 }

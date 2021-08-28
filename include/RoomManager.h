@@ -82,6 +82,8 @@ public:
 
 	void ToggleTurnOwner(ClientCtxPtr pCc);
 
+	void IncreaseRemainingDeck(ClientCtxPtr pCc) { ++(mRooms[GetClientParticipatingRoom(pCc)].remainingDecks[pCc]); }
+
 	std::vector<DeployData> GetDeployStatus(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].deloyStatus[pCc]; }
 	std::string GetTurnOwner(ClientCtxPtr pCc) { return mRooms[GetClientParticipatingRoom(pCc)].turnOwner; }
 	ClientCtxPtr GetOpponent(ClientCtxPtr pCc) {

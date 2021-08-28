@@ -43,7 +43,10 @@ public:
 			return MSG_FAILED;
 		default:
 			DecreaseArmor(deckNum);
-			if (GetEnhancedState(deckNum)) return MSG_ARMORED;
+			if (GetEnhancedState(deckNum)) {
+				mDecks[deckNum].isEnhanced = false;
+				return MSG_ARMORED;
+			}
 			else return MSG_SUCCESS;
 		}
 	};

@@ -88,6 +88,7 @@ Enhancement::Result Enhancement::cast(ClientCtxPtr pCc, uint8_t x, uint8_t y) {
 
 		if (ch->GetDeckArmor(craftNum, deckNum) != 0) {
 			ch->EnhanceDeckArmor(craftNum, deckNum);
+			rm->IncreaseRemainingDeck(pCc);
 			skillResult.isSuccess = true;
 		}
 	}
